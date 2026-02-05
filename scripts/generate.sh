@@ -29,35 +29,48 @@ fi
 # Format output
 cat << EOF
 
+═══════════════════════════════════════════════════════
 🎉 Your Bloom Identity Card is ready! 🤖
+═══════════════════════════════════════════════════════
 
-💜 **The Visionary** (85% confidence)
+🔗 VIEW YOUR IDENTITY CARD (Click below):
+
+   $DASHBOARD_URL
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💜 The Visionary (85% confidence)
 💬 "See beyond the hype"
 
 📝 You are a forward-thinking builder who sees beyond
-    the hype and focuses on real-world impact.
+   the hype and focuses on real-world impact.
 
 🏷️ Categories: Crypto, DeFi, Web3
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 🎯 Recommended OpenClaw Skills (3):
-1. **DeFi Protocol Analyzer** (95% match)
+
+1. DeFi Protocol Analyzer (95% match)
    Analyze DeFi protocols for security and efficiency
-   💡 Tip creators with your Agent wallet below!
+   💡 Tip creators with your Agent wallet!
 
-2. **Smart Contract Auditor** (90% match)
+2. Smart Contract Auditor (90% match)
    Automated smart contract security auditing
-   💡 Tip creators with your Agent wallet below!
+   💡 Tip creators with your Agent wallet!
 
-3. **Gas Optimizer** (88% match)
+3. Gas Optimizer (88% match)
    Optimize transaction gas costs
-   💡 Tip creators with your Agent wallet below!
+   💡 Tip creators with your Agent wallet!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🤖 Agent On-Chain Identity
+
 📍 Wallet: [auto-generated]
 🔗 X402: https://x402.bloomprotocol.ai/base-sepolia/[wallet]
 ⛓️  Network: base-sepolia
 
-🌐 View full dashboard:
-   $DASHBOARD_URL
+═══════════════════════════════════════════════════════
 
 EOF
