@@ -46,6 +46,16 @@ async function generateFreshToken() {
   const signature = await account.signMessage({ message });
   console.log('✅ Signature:', signature.substring(0, 20) + '...\n');
 
+  // Include identity metadata in the token
+  const identityMetadata = {
+    personalityType: 'The Visionary',
+    tagline: 'See beyond the hype',
+    description: 'You are a forward-thinking builder who sees beyond the hype and focuses on real-world impact.',
+    mainCategories: ['Crypto', 'DeFi', 'Web3'],
+    subCategories: ['Smart Contracts', 'Layer 2', 'Cross-chain'],
+    confidence: 85,
+  };
+
   const payload = {
     type: 'agent',
     version: '1.0',
@@ -56,6 +66,7 @@ async function generateFreshToken() {
     scope: ['read:identity', 'read:skills', 'read:wallet'],
     signature,
     signedMessage: message,
+    identity: identityMetadata,  // Add identity data to token
   };
 
   console.log('Signing JWT with secret:', jwtSecret.substring(0, 10) + '...');
