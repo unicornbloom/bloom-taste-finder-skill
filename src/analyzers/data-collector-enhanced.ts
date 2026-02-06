@@ -349,27 +349,43 @@ export class EnhancedDataCollector {
   }
 
   /**
-   * Collect conversation memory from OpenClaw
+   * Collect conversation memory from OpenClaw session files
    */
   private async collectConversationMemory(userId: string): Promise<ConversationMemory> {
-    // TODO: Access OpenClaw's conversation memory API
-    // openclaw.memory.getTopics(userId)
-    // openclaw.memory.getInterests(userId)
-    // openclaw.memory.getHistory(userId, limit)
+    try {
+      // Import session reader (dynamic to avoid circular deps)
+      const { createSessionReader } = await import('../integrations/openclaw-session-reader');
+      const sessionReader = createSessionReader();
 
-    // Mock data for development
-    return {
-      topics: ['AI tools', 'DeFi protocols', 'productivity', 'wellness', 'early-stage investing'],
-      interests: ['AI', 'Web3', 'meditation', 'productivity tools', 'supporting startups'],
-      preferences: ['early stage', 'tech-focused', 'user-friendly', 'open source'],
-      history: [
-        'User asked about AI tools for content creation',
-        'User expressed interest in DeFi lending protocols',
-        'User mentioned wanting to optimize daily workflows',
-        'User discussed mindfulness and meditation practices',
-        'User asked about early-stage crypto projects',
-      ],
-    };
+      // Read and analyze session history
+      const analysis = await sessionReader.readSessionHistory(userId);
+
+      if (analysis.messageCount === 0) {
+        console.log('⚠️  No conversation history found, using empty data');
+        return {
+          topics: [],
+          interests: [],
+          preferences: [],
+          history: [],
+        };
+      }
+
+      return {
+        topics: analysis.topics,
+        interests: analysis.interests,
+        preferences: analysis.preferences,
+        history: analysis.history,
+      };
+    } catch (error) {
+      console.error('❌ Failed to read session history:', error);
+      // Return empty rather than failing completely
+      return {
+        topics: [],
+        interests: [],
+        preferences: [],
+        history: [],
+      };
+    }
   }
 
   /**

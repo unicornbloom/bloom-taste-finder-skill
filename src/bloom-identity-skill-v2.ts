@@ -159,7 +159,11 @@ export class BloomIdentitySkillV2 {
             personalityType: analysis.personalityType,
             customTagline: analysis.tagline,
             customDescription: analysis.description,
-            mainCategories: this.categoryMapper.getMainCategories(analysis.personalityType),
+            // ⭐ Use detected categories from actual conversation data
+            // Priority: What they talk about > personality-based defaults
+            mainCategories: analysis.detectedCategories.length > 0
+              ? analysis.detectedCategories
+              : this.categoryMapper.getMainCategories(analysis.personalityType),
             subCategories: analysis.detectedInterests,
           };
 
