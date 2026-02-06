@@ -31,24 +31,21 @@
 
 ### **1. Skill Code (`bloom-identity-skill-v2.ts`)**
 
-**Updated Step 5:**
+**Updated Step 5 (Single Atomic Operation):**
 ```typescript
 // Step 5: Register agent and save identity card with Bloom
 try {
-  // Register agent with Bloom backend
-  const registration = await this.agentWallet!.registerWithBloom('Bloom Skill Discovery Agent');
-  agentUserId = registration.agentUserId;
-
-  // Save identity card data to Bloom backend
-  await this.agentWallet!.saveIdentityCard(agentUserId, {
+  // Register agent with Bloom backend (includes identity data in one call)
+  const registration = await this.agentWallet!.registerWithBloom('Bloom Skill Discovery Agent', {
     personalityType: identityData!.personalityType,
-    customTagline: identityData!.customTagline,
-    customDescription: identityData!.customDescription,
+    tagline: identityData!.customTagline,  // Fixed: customTagline → tagline
+    description: identityData!.customDescription,  // Fixed: customDescription → description
     mainCategories: identityData!.mainCategories,
     subCategories: identityData!.subCategories,
-    dataQuality,
+    confidence: dataQuality,  // Fixed: dataQuality → confidence
     mode: usedManualQA ? 'manual' : 'data',
   });
+  agentUserId = registration.agentUserId;
 
   // Create permanent dashboard link (no expiry, no sensitive data)
   const baseUrl = process.env.DASHBOARD_URL || 'https://preflight.bloomprotocol.ai';
@@ -58,24 +55,28 @@ try {
 
 ### **2. Agent Wallet (`agent-wallet.ts`)**
 
-**Added new method: `saveIdentityCard()`**
+**Updated `registerWithBloom()` method:**
 ```typescript
-async saveIdentityCard(agentUserId: number, identityData: {
-  personalityType: string;
-  customTagline: string;
-  customDescription: string;
-  mainCategories: string[];
-  subCategories: string[];
-  dataQuality?: number;
-  mode?: string;
-}): Promise<{ success: boolean; cardId?: string }>
+async registerWithBloom(
+  agentName: string,
+  identityData?: {
+    personalityType: string;
+    tagline: string;  // ✅ Fixed field name
+    description: string;  // ✅ Fixed field name
+    mainCategories: string[];
+    subCategories: string[];
+    confidence: number;  // ✅ Fixed field name
+    mode: 'data' | 'manual';
+  }
+): Promise<{ agentUserId: number; x402Endpoint: string }>
 ```
 
-**What it does:**
-- Calls `POST /agent/identity-card` on Bloom backend
-- Sends identity card data with agent user ID
-- Signs the data to prove authenticity
-- Non-critical (won't fail skill if backend unavailable)
+**What changed:**
+- Now accepts optional `identityData` parameter
+- Sends identity data to backend in single call
+- Matches backend DTO format exactly
+- Field names fixed: `tagline`, `description`, `confidence` (not `customTagline`, `customDescription`, `dataQuality`)
+- Removed separate `saveIdentityCard()` method (not needed)
 
 ### **3. Environment Config (`.env.example`)**
 
@@ -90,26 +91,30 @@ DASHBOARD_URL=https://preflight.bloomprotocol.ai
 
 ---
 
-## 🎨 Backend Requirements
+## 🎨 Backend Status
 
-### **New Endpoint: `POST /agent/identity-card`**
+### **✅ Existing Endpoint: `POST /x402/agent-claim`**
+
+**Location:** `src/modules/x402/x402.controller.ts:103`
 
 **Request:**
 ```json
 {
-  "agentUserId": 416543868,
+  "agentName": "Bloom Skill Discovery Agent",
+  "agentType": "skill-discovery",
   "walletAddress": "0x1234...",
+  "network": "base-mainnet",
+  "signature": "0xabc...",
+  "message": "Bloom Agent Registration: Bloom Skill Discovery Agent",
   "identityData": {
     "personalityType": "The Visionary",
-    "customTagline": "Early adopter shaping crypto's future",
-    "customDescription": "You're not just following trends...",
+    "tagline": "Early adopter shaping crypto's future",
+    "description": "You're not just following trends...",
     "mainCategories": ["DeFi", "Infrastructure", "Social"],
     "subCategories": ["defi", "dao", "nft"],
-    "dataQuality": 85,
+    "confidence": 85,
     "mode": "data"
-  },
-  "signature": "0xabc...",
-  "timestamp": 1707234567890
+  }
 }
 ```
 
@@ -118,28 +123,63 @@ DASHBOARD_URL=https://preflight.bloomprotocol.ai
 {
   "success": true,
   "data": {
-    "cardId": "abc123" // Optional, if you want to track card IDs
+    "agentUserId": 416543868,
+    "x402Endpoint": "https://x402.bloomprotocol.ai/base/0x1234..."
   }
 }
 ```
 
-**What backend should do:**
-1. Verify signature (optional - can trust the agent wallet)
-2. Store identity card data associated with `agentUserId`
-3. Overwrite previous card if exists (agents can regenerate)
-4. Return success
+**What it does:**
+1. ✅ Verifies signature to prove wallet ownership
+2. ✅ Verifies nonce to prevent replay attacks
+3. ✅ Stores agent data in `agent_identities` MongoDB collection
+4. ✅ Stores identity card data in same document
+5. ✅ Generates consistent agentUserId from wallet address
+6. ✅ Returns agentUserId and X402 endpoint
+
+### **❌ Missing: GET Endpoint to Retrieve Agent Data**
+
+**Backend needs:** `GET /agent/{agentUserId}` or `GET /x402/agent/{agentUserId}`
+
+**What it should do:**
+1. Accept `agentUserId` from URL path
+2. Query `agent_identities` collection in MongoDB
+3. Return agent data including identity card:
+```json
+{
+  "success": true,
+  "data": {
+    "agentUserId": 416543868,
+    "walletAddress": "0x1234...",
+    "agentName": "Bloom Skill Discovery Agent",
+    "network": "base-mainnet",
+    "x402Endpoint": "https://x402.bloomprotocol.ai/base/0x1234...",
+    "identityData": {
+      "personalityType": "The Visionary",
+      "tagline": "Early adopter shaping crypto's future",
+      "description": "You're not just following trends...",
+      "mainCategories": ["DeFi", "Infrastructure", "Social"],
+      "subCategories": ["defi", "dao", "nft"],
+      "confidence": 85,
+      "mode": "data"
+    },
+    "createdAt": "2025-02-06T12:00:00Z",
+    "updatedAt": "2025-02-06T12:00:00Z"
+  }
+}
+```
 
 ### **Frontend Route: `/agent/{agentUserId}`**
 
 **What frontend should do:**
 1. Extract `agentUserId` from URL path
-2. Fetch identity card data from backend: `GET /agent/{agentUserId}/identity-card`
+2. Fetch agent data from backend: `GET /agent/{agentUserId}`
 3. Display identity card with all data:
    - Personality type + emoji
    - Tagline
    - Description
    - Categories
-   - Data quality score
+   - Confidence score
    - Mode (manual vs data-driven)
 4. If no card exists, show friendly message: "No identity card found for this agent"
 

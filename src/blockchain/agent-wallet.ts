@@ -144,11 +144,23 @@ export class AgentWallet {
   }
 
   /**
-   * Register agent wallet with Bloom Protocol backend
+   * Register agent wallet with Bloom Protocol backend and save identity card
    *
-   * This creates an agent user in Bloom system and associates the wallet
+   * This creates an agent user in Bloom system, associates the wallet,
+   * and stores the identity card data in one atomic operation
    */
-  async registerWithBloom(agentName: string): Promise<{ agentUserId: number; x402Endpoint: string }> {
+  async registerWithBloom(
+    agentName: string,
+    identityData?: {
+      personalityType: string;
+      tagline: string;
+      description: string;
+      mainCategories: string[];
+      subCategories: string[];
+      confidence: number;
+      mode: 'data' | 'manual';
+    }
+  ): Promise<{ agentUserId: number; x402Endpoint: string }> {
     if (!this.walletAddress) {
       throw new Error('Agent wallet not initialized');
     }
@@ -160,7 +172,7 @@ export class AgentWallet {
       const message = `Bloom Agent Registration: ${agentName}`;
       const signature = await this.signMessage(message);
 
-      // Call Bloom backend API
+      // Call Bloom backend API with identity data
       const response = await fetch(`${process.env.BLOOM_API_URL || 'https://api.bloomprotocol.ai'}/x402/agent-claim`, {
         method: 'POST',
         headers: {
@@ -173,6 +185,7 @@ export class AgentWallet {
           network: this.network,
           signature,
           message,
+          identityData, // Include identity card data
         }),
       });
 
@@ -195,72 +208,6 @@ export class AgentWallet {
     } catch (error) {
       console.error('❌ Bloom registration failed:', error);
       throw new Error(`Bloom registration failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-
-  /**
-   * Save identity card data to Bloom Protocol backend
-   *
-   * Stores the generated identity card so it can be viewed on the dashboard
-   * Creates a permanent, shareable link to the identity card
-   */
-  async saveIdentityCard(agentUserId: number, identityData: {
-    personalityType: string;
-    customTagline: string;
-    customDescription: string;
-    mainCategories: string[];
-    subCategories: string[];
-    dataQuality?: number;
-    mode?: string;
-  }): Promise<{ success: boolean; cardId?: string }> {
-    if (!this.walletAddress) {
-      throw new Error('Agent wallet not initialized');
-    }
-
-    console.log(`💾 Saving identity card to Bloom Protocol...`);
-
-    try {
-      // Sign the identity data to prove authenticity
-      const dataHash = JSON.stringify(identityData);
-      const signature = await this.signMessage(`Bloom Identity Card: ${dataHash}`);
-
-      // Call Bloom backend API to save card
-      const response = await fetch(`${process.env.BLOOM_API_URL || 'https://api.bloomprotocol.ai'}/agent/identity-card`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          agentUserId,
-          walletAddress: this.walletAddress,
-          identityData,
-          signature,
-          timestamp: Date.now(),
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to save identity card');
-      }
-
-      console.log(`✅ Identity card saved!`);
-
-      return {
-        success: true,
-        cardId: result.data?.cardId,
-      };
-    } catch (error) {
-      console.error('❌ Failed to save identity card:', error);
-      // Don't throw - this is non-critical, just log the error
-      return {
-        success: false,
-      };
     }
   }
 

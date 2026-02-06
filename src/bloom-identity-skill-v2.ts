@@ -221,29 +221,24 @@ export class BloomIdentitySkillV2 {
       const agentWallet = await this.initializeAgentWallet();
       console.log(`✅ Agent wallet ready: ${agentWallet.address}`);
 
-      // Step 5: Register agent and save identity card with Bloom
+      // Step 5: Register agent and save identity card with Bloom (single atomic operation)
       let dashboardUrl: string | undefined;
       let agentUserId: number | undefined;
       try {
-        console.log('📝 Step 5: Registering agent with Bloom...');
+        console.log('📝 Step 5: Registering agent with Bloom and saving identity card...');
 
-        // Register agent with Bloom backend
-        const registration = await this.agentWallet!.registerWithBloom('Bloom Skill Discovery Agent');
-        agentUserId = registration.agentUserId;
-        console.log(`✅ Agent registered! User ID: ${agentUserId}`);
-
-        // Save identity card data to Bloom backend
-        console.log('💾 Saving identity card...');
-        await this.agentWallet!.saveIdentityCard(agentUserId, {
+        // Register agent with Bloom backend (includes identity data)
+        const registration = await this.agentWallet!.registerWithBloom('Bloom Skill Discovery Agent', {
           personalityType: identityData!.personalityType,
-          customTagline: identityData!.customTagline,
-          customDescription: identityData!.customDescription,
+          tagline: identityData!.customTagline,
+          description: identityData!.customDescription,
           mainCategories: identityData!.mainCategories,
           subCategories: identityData!.subCategories,
-          dataQuality,
+          confidence: dataQuality,
           mode: usedManualQA ? 'manual' : 'data',
         });
-        console.log(`✅ Identity card saved!`);
+        agentUserId = registration.agentUserId;
+        console.log(`✅ Agent registered with identity card! User ID: ${agentUserId}`);
 
         // Create permanent dashboard link (no expiry, no sensitive data in URL)
         const baseUrl = process.env.DASHBOARD_URL || 'https://preflight.bloomprotocol.ai';
