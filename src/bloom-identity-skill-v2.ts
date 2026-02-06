@@ -259,26 +259,26 @@ export class BloomIdentitySkillV2 {
         console.warn('⚠️  Bloom registration failed (skipping dashboard link):', error);
       }
 
-      // Step 6: Generate Twitter share link (optional)
+      // Step 6: Twitter share (DISABLED - image embedding issues)
+      // TODO: Re-enable when we can properly embed card images in Twitter
       let shareUrl: string | undefined;
-      if (!options?.skipShare) {
-        try {
-          console.log('📢 Step 6: Generating Twitter share link...');
-          shareUrl = await this.twitterShare.share({
-            userId,
-            personalityType: identityData!.personalityType,
-            recommendations: recommendations.slice(0, 3).map(r => ({
-              skillName: r.skillName,
-              matchScore: r.matchScore,
-            })),
-            // Wallet address removed for security - coming soon features
-            agentWallet: undefined,
-          });
-          console.log(`✅ Share link ready`);
-        } catch (error) {
-          console.warn('⚠️  Twitter share link generation failed (skipping):', error);
-        }
-      }
+      // if (!options?.skipShare) {
+      //   try {
+      //     console.log('📢 Step 6: Generating Twitter share link...');
+      //     shareUrl = await this.twitterShare.share({
+      //       userId,
+      //       personalityType: identityData!.personalityType,
+      //       recommendations: recommendations.slice(0, 3).map(r => ({
+      //         skillName: r.skillName,
+      //         matchScore: r.matchScore,
+      //       })),
+      //       agentWallet: undefined,
+      //     });
+      //     console.log(`✅ Share link ready`);
+      //   } catch (error) {
+      //     console.warn('⚠️  Twitter share link generation failed (skipping):', error);
+      //   }
+      // }
 
       // Success!
       console.log('🎉 Bloom Identity generation complete!');
@@ -439,36 +439,34 @@ function formatSuccessMessage(result: any): string {
   const qualityText = dataQuality ? ` (${dataQuality}% confidence)` : '';
 
   return `
-🎉 **Your Bloom Identity Card Generated!** ${modeEmoji}
+🎉 **Your Bloom Identity Card is Ready!** ${modeEmoji}
 
+${result.dashboardUrl ? `🌐 **View Your Card**\n→ ${result.dashboardUrl}\n` : ''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-💜 **Your Identity**
 
 ${getPersonalityEmoji(identityData.personalityType)} **${identityData.personalityType}**${qualityText}
 💬 *"${identityData.customTagline}"*
 
 ${identityData.customDescription}
 
-**Categories**: ${identityData.mainCategories.join(', ')}${identityData.subCategories.length > 0 ? `\n**Interests**: ${identityData.subCategories.slice(0, 3).join(', ')}` : ''}
+**Categories**: ${identityData.mainCategories.join(', ')}
 
-${result.dashboardUrl ? `\n🌐 **View & Build Your Profile**\n→ ${result.dashboardUrl}\n\nYour identity card is saved on Bloom Protocol. You can return anytime to view and enhance your profile!\n` : ''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 **Recommended OpenClaw Skills** (${recommendations.length})
+🎯 **Matching Skills** (${recommendations.length})
 
 ${recommendations
   .slice(0, 5)
   .map((s: any, i: number) => {
-    const creatorInfo = s.creator ? ` • by ${s.creator}` : '';
-    return `${i + 1}. **${s.skillName}** (${s.matchScore}% match)${creatorInfo}
+    const creatorInfo = s.creator ? ` • ${s.creator}` : '';
+    return `${i + 1}. **${s.skillName}** (${s.matchScore}%)${creatorInfo}
    ${s.description}`;
   })
   .join('\n\n')}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-${mode === 'manual' ? '📝 Generated via Q&A' : '🤖 Analyzed from on-chain activity'} • Built with @openclaw @coinbase @base 🦞
+${mode === 'manual' ? '📝 Q&A' : '🤖 On-chain'} • @openclaw @coinbase @base 🦞
   `.trim();
 }
 

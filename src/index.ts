@@ -53,44 +53,34 @@ async function main() {
 }
 
 function formatResult(result: any): void {
-  const { identityData, agentWallet, recommendations, mode, dataQuality, dashboardUrl, shareUrl } = result;
+  const { identityData, agentWallet, recommendations, mode, dataQuality, dashboardUrl } = result;
 
   const modeEmoji = mode === 'manual' ? '📝' : '🤖';
   const qualityText = dataQuality ? ` (${dataQuality}% confidence)` : '';
 
-  console.log(`\n🎉 Your Bloom Identity Card is ready! ${modeEmoji}\n`);
+  console.log(`\n🎉 Bloom Identity Card Ready! ${modeEmoji}\n`);
 
-  console.log(`${getPersonalityEmoji(identityData.personalityType)} **${identityData.personalityType}**${qualityText}`);
-  console.log(`💬 "${identityData.customTagline}"\n`);
-
-  console.log(`📝 ${identityData.customDescription}\n`);
-
-  console.log(`🏷️ Categories: ${identityData.mainCategories.join(', ')}\n`);
-
-  console.log(`🎯 Recommended OpenClaw Skills (${recommendations.length}):`);
-  recommendations.slice(0, 5).forEach((skill: any, i: number) => {
-    console.log(`${i + 1}. **${skill.skillName}** (${skill.matchScore}% match)`);
-    console.log(`   ${skill.description}`);
-    console.log(`   💡 Tip creators with your Agent wallet below!\n`);
-  });
-
-  console.log(`🤖 Agent On-Chain Identity`);
-  console.log(`✅ Your agent wallet has been deployed on ${agentWallet.network}!`);
-  console.log(`⚠️  Wallet features coming soon:`);
-  console.log(`   • Tipping skill creators`);
-  console.log(`   • Receiving X402 payments`);
-  console.log(`   • Wallet management\n`);
-  console.log(`🔒 Note: Please do not deposit funds yet - withdrawal features are in development.\n`);
-
+  // Dashboard URL first (most important)
   if (dashboardUrl) {
-    console.log(`🌐 View full dashboard:`);
+    console.log(`🌐 View Your Card:`);
     console.log(`   ${dashboardUrl}\n`);
   }
 
-  if (shareUrl) {
-    console.log(`📢 Share on Twitter:`);
-    console.log(`   ${shareUrl}\n`);
-  }
+  console.log(`${getPersonalityEmoji(identityData.personalityType)} ${identityData.personalityType}${qualityText}`);
+  console.log(`💬 "${identityData.customTagline}"\n`);
+  console.log(`${identityData.customDescription}\n`);
+  console.log(`Categories: ${identityData.mainCategories.join(', ')}\n`);
+
+  console.log(`🎯 Matching Skills (${recommendations.length}):`);
+  recommendations.slice(0, 5).forEach((skill: any, i: number) => {
+    const creatorInfo = skill.creator ? ` • ${skill.creator}` : '';
+    console.log(`${i + 1}. ${skill.skillName} (${skill.matchScore}%)${creatorInfo}`);
+    console.log(`   ${skill.description}\n`);
+  });
+
+  console.log(`🤖 Agent Wallet: ${agentWallet.network}`);
+  console.log(`⚠️  Features coming soon (tipping, payments, management)`);
+  console.log(`🔒 Do not deposit funds - withdrawals not ready\n`);
 }
 
 function getPersonalityEmoji(type: string): string {
