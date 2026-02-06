@@ -6,7 +6,8 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "build": "tsc",
-    "test": "echo \"No tests yet\""
+    "test": "echo \"No tests yet\"",
+    "generate-token": "ts-node generate-fresh-token.ts"
   },
   "keywords": [
     "openclaw",
