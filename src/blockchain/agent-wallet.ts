@@ -15,7 +15,7 @@
  * - X402 Protocol: https://docs.cdp.coinbase.com/x402/welcome
  */
 
-import { CdpWalletProvider } from '@coinbase/agentkit';
+import { CdpEvmWalletProvider } from '@coinbase/agentkit';
 import { walletStorage } from './wallet-storage';
 
 export interface AgentWalletConfig {
@@ -43,9 +43,9 @@ export interface AgentWalletInfo {
  */
 export class AgentWallet {
   private userId: string;  // ⭐ User identifier
-  private walletProvider: CdpWalletProvider | null = null;
+  private walletProvider: CdpEvmWalletProvider | null = null;
   private network: 'base-mainnet' | 'base-sepolia';
-  private walletAddress: string | null = null;
+  private walletAddress: `0x${string}` | null = null;
 
   constructor(config: AgentWalletConfig) {
     // ⭐ userId is required for per-user wallets
@@ -90,7 +90,7 @@ export class AgentWallet {
 
       // Generate deterministic test wallet address per user (for testing only!)
       const hash = this.simpleHash(this.userId);
-      this.walletAddress = '0x' + hash.substring(0, 40);
+      this.walletAddress = ('0x' + hash.substring(0, 40)) as `0x${string}`;
 
       console.log(`🧪 Mock wallet for ${this.userId}: ${this.walletAddress}`);
 
@@ -107,27 +107,29 @@ export class AgentWallet {
    */
   private async initializeWalletInternal(): Promise<AgentWalletInfo> {
     // Map network name to CDP format
-    const cdpNetwork = this.network === 'base-mainnet' ? 'base-mainnet' : 'base-sepolia';
+    const cdpNetwork = this.network === 'base-mainnet' ? 'base' : 'base-sepolia';
 
     // Get CDP API credentials from environment variables
     const apiKeyId = process.env.CDP_API_KEY_ID;
-    const apiKeyPrivate = process.env.CDP_API_KEY_SECRET;
+    const apiKeySecret = process.env.CDP_API_KEY_SECRET;
+    const walletSecret = process.env.CDP_WALLET_SECRET;
 
     // ⭐ Step 1: Check if user already has a wallet
     const existingWallet = await walletStorage.getUserWallet(this.userId);
 
     if (existingWallet && existingWallet.network === this.network) {
-      // ⭐ Import existing wallet
+      // ⭐ Import existing wallet by address
       console.log(`📂 Loading existing wallet for user ${this.userId}...`);
 
-      this.walletProvider = await CdpWalletProvider.configureWithWallet({
-        networkId: cdpNetwork,  // ✅ Fixed: networkId (not network)
-        cdpWalletData: existingWallet.walletData,  // ⭐ Import stored wallet
-        apiKeyId,  // ✅ Fixed: apiKeyId (not cdpApiKeyId)
-        apiKeyPrivate,  // ✅ Fixed: apiKeyPrivate (not cdpApiKeySecret)
+      this.walletProvider = await CdpEvmWalletProvider.configureWithWallet({
+        networkId: cdpNetwork,
+        apiKeyId,
+        apiKeySecret,
+        walletSecret,
+        address: existingWallet.walletAddress as `0x${string}`,  // ⭐ Import by address
       });
 
-      this.walletAddress = this.walletProvider.getAddress();
+      this.walletAddress = this.walletProvider.getAddress() as `0x${string}`;
 
       // Update last used timestamp
       await walletStorage.updateLastUsed(this.userId);
@@ -135,23 +137,22 @@ export class AgentWallet {
       console.log(`✅ Existing wallet loaded: ${this.walletAddress}`);
 
     } else {
-      // ⭐ Create new wallet
+      // ⭐ Create new wallet with idempotency key
       console.log(`🆕 Creating new wallet for user ${this.userId}...`);
 
-      this.walletProvider = await CdpWalletProvider.configureWithWallet({
-        networkId: cdpNetwork,  // ✅ Fixed: networkId (not network)
-        apiKeyId,  // ✅ Fixed: apiKeyId (not cdpApiKeyId)
-        apiKeyPrivate,  // ✅ Fixed: apiKeyPrivate (not cdpApiKeySecret)
-        // No cdpWalletData = creates new wallet
+      this.walletProvider = await CdpEvmWalletProvider.configureWithWallet({
+        networkId: cdpNetwork,
+        apiKeyId,
+        apiKeySecret,
+        walletSecret,
+        idempotencyKey: `bloom-agent-${this.userId}`,  // ⭐ Ensures same user gets same wallet
       });
 
-      this.walletAddress = this.walletProvider.getAddress();
+      this.walletAddress = this.walletProvider.getAddress() as `0x${string}`;
 
-      // ⭐ Export and store wallet data
-      const walletData = await this.walletProvider.exportWallet();
+      // ⭐ Store wallet address (CDP manages wallet server-side in 0.10.4)
       await walletStorage.saveUserWallet(
         this.userId,
-        walletData,
         this.walletAddress,
         this.network
       );

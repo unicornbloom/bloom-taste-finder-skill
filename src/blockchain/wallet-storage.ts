@@ -3,16 +3,19 @@
  *
  * Stores and retrieves per-user wallet data
  * Currently uses file-based storage (can migrate to MongoDB later)
+ *
+ * ⭐ AgentKit 0.10.4 Update:
+ * - Wallets are now managed server-side by CDP
+ * - We only need to store the wallet address (not full wallet data)
+ * - CDP retrieves wallets by address using API credentials
  */
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import type { WalletData } from '@coinbase/coinbase-sdk';
 
 export interface UserWalletRecord {
   userId: string;
-  walletData: string;  // JSON-stringified WalletData
-  walletAddress: string;
+  walletAddress: `0x${string}`;
   network: string;
   createdAt: string;
   lastUsedAt: string;
@@ -69,11 +72,12 @@ export class WalletStorage {
 
   /**
    * Save wallet for a specific user
+   *
+   * ⭐ AgentKit 0.10.4: Only stores address (CDP manages wallet server-side)
    */
   async saveUserWallet(
     userId: string,
-    walletData: WalletData,
-    walletAddress: string,
+    walletAddress: `0x${string}`,
     network: string
   ): Promise<void> {
     const records = await this.loadRecords();
@@ -82,7 +86,6 @@ export class WalletStorage {
 
     records[userId] = {
       userId,
-      walletData: JSON.stringify(walletData),
       walletAddress,
       network,
       createdAt: records[userId]?.createdAt || now,
