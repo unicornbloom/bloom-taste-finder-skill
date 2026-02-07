@@ -40,15 +40,21 @@ This skill automatically creates **real wallets** for each user:
 
 - ✅ **Zero setup required** - Works out of the box
 - ✅ **Real wallets on Base** - Can send/receive funds
-- ✅ **Encrypted storage** - Private keys secured with AES-256-GCM
+- ⚠️ **Local storage** - Private keys stored locally (encryption planned post-hackathon)
 - ✅ **Persistent** - Same user = same wallet across sessions
 - ✅ **No external API needed** - Fully standalone
 
 **How it works:**
 
 1. **Tier 1** (Recommended): Use Coinbase Developer Platform (CDP) credentials for production-grade wallets
-2. **Tier 2** (Auto-fallback): Create local wallets using viem - fully functional, encrypted, persistent
+2. **Tier 2** (Auto-fallback): Create local wallets using viem - fully functional, persistent (TODO: add encryption)
 3. **Tier 3** (Display-only): Mock wallet for UI preview (no real transactions)
+
+**⚠️ Security Notice (Hackathon MVP):**
+- **Tier 2 local wallets** store private keys **unencrypted** in `.wallet-storage/user-wallets.json`
+- This is acceptable for hackathon/testing but **NOT production-ready**
+- Post-hackathon: Will implement AES-256-GCM encryption using `WALLET_ENCRYPTION_SECRET`
+- **For production use:** Use Tier 1 (CDP) wallets which are managed securely by Coinbase
 
 **Power users:** To use CDP wallets, add these to your `.env`:
 ```bash
