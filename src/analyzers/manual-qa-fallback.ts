@@ -22,40 +22,51 @@ export interface ManualQAResult {
 }
 
 /**
- * 3 simple questions to determine personality
+ * 4 gentle questions to determine personality
  */
 export const MANUAL_QUESTIONS = [
   {
-    id: 'interests',
-    question: 'What are you most excited about right now?',
+    id: 'focus',
+    question: "What's been taking most of your attention lately?",
     options: [
-      { value: 'AI and new tech', personality: PersonalityType.THE_INNOVATOR, weight: 10 },
-      { value: 'Crypto and Web3', personality: PersonalityType.THE_VISIONARY, weight: 10 },
-      { value: 'Productivity tools', personality: PersonalityType.THE_OPTIMIZER, weight: 10 },
-      { value: 'Learning new things', personality: PersonalityType.THE_EXPLORER, weight: 10 },
-      { value: 'Health and wellness', personality: PersonalityType.THE_CULTIVATOR, weight: 10 },
+      { value: 'Exploring or building new AI tools', personality: PersonalityType.THE_INNOVATOR, weight: 10 },
+      { value: 'Diving into crypto / Web3 ideas', personality: PersonalityType.THE_VISIONARY, weight: 10 },
+      { value: 'Streamlining workflows and execution', personality: PersonalityType.THE_OPTIMIZER, weight: 10 },
+      { value: 'Learning deeply and building a knowledge base', personality: PersonalityType.THE_EXPLORER, weight: 10 },
+      { value: 'Health, mindset, or life balance', personality: PersonalityType.THE_CULTIVATOR, weight: 10 },
     ],
   },
   {
-    id: 'activities',
-    question: 'How do you spend your free time online?',
+    id: 'pull',
+    question: 'What kind of content naturally pulls you in?',
     options: [
-      { value: 'Trying new AI tools', personality: PersonalityType.THE_INNOVATOR, weight: 8 },
-      { value: 'Following crypto projects', personality: PersonalityType.THE_VISIONARY, weight: 8 },
-      { value: 'Optimizing my workflows', personality: PersonalityType.THE_OPTIMIZER, weight: 8 },
-      { value: 'Taking online courses', personality: PersonalityType.THE_EXPLORER, weight: 8 },
-      { value: 'Meditation apps', personality: PersonalityType.THE_CULTIVATOR, weight: 8 },
+      { value: 'Fresh AI/tool demos', personality: PersonalityType.THE_INNOVATOR, weight: 8 },
+      { value: 'Crypto/Web3 narratives and trends', personality: PersonalityType.THE_VISIONARY, weight: 8 },
+      { value: 'Productivity systems and workflows', personality: PersonalityType.THE_OPTIMIZER, weight: 8 },
+      { value: 'Deep dives, research, or courses', personality: PersonalityType.THE_EXPLORER, weight: 8 },
+      { value: 'Mental health, wellness, or lifestyle', personality: PersonalityType.THE_CULTIVATOR, weight: 8 },
     ],
   },
   {
-    id: 'projects',
-    question: 'What type of early-stage projects interest you most?',
+    id: 'support',
+    question: 'When you support an early-stage project, which role feels most like you?',
     options: [
-      { value: 'Cutting-edge AI/ML', personality: PersonalityType.THE_INNOVATOR, weight: 6 },
-      { value: 'DeFi and blockchain', personality: PersonalityType.THE_VISIONARY, weight: 6 },
-      { value: 'Productivity and automation', personality: PersonalityType.THE_OPTIMIZER, weight: 6 },
-      { value: 'Education and knowledge', personality: PersonalityType.THE_EXPLORER, weight: 6 },
-      { value: 'Health and wellness tech', personality: PersonalityType.THE_CULTIVATOR, weight: 6 },
+      { value: 'The first to try new tech', personality: PersonalityType.THE_INNOVATOR, weight: 7 },
+      { value: 'Believing early and amplifying the story', personality: PersonalityType.THE_VISIONARY, weight: 7 },
+      { value: 'Making it smoother and more efficient', personality: PersonalityType.THE_OPTIMIZER, weight: 7 },
+      { value: 'Offering research, insight, or strategy', personality: PersonalityType.THE_EXPLORER, weight: 7 },
+      { value: 'Caring about human impact and wellbeing', personality: PersonalityType.THE_CULTIVATOR, weight: 7 },
+    ],
+  },
+  {
+    id: 'category',
+    question: 'If you had to pick one theme to go deep on first, what would it be?',
+    options: [
+      { value: 'AI Tools / New Tech', personality: PersonalityType.THE_INNOVATOR, weight: 9 },
+      { value: 'Crypto / Web3', personality: PersonalityType.THE_VISIONARY, weight: 9 },
+      { value: 'Productivity / Automation', personality: PersonalityType.THE_OPTIMIZER, weight: 9 },
+      { value: 'Learning / Education', personality: PersonalityType.THE_EXPLORER, weight: 9 },
+      { value: 'Wellness / Mental Health', personality: PersonalityType.THE_CULTIVATOR, weight: 9 },
     ],
   },
 ];

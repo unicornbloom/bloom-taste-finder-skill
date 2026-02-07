@@ -358,6 +358,7 @@ export class EnhancedDataCollector {
         interests: [],
         preferences: [],
         history: [],
+        messageCount: 0,
       };
     }
   }

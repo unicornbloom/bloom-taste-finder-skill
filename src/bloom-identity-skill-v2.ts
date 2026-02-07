@@ -164,41 +164,58 @@ export class BloomIdentitySkillV2 {
         console.log(`📊 Data quality score: ${dataQuality}/100`);
         console.log(`📊 Available sources: ${userData.sources.join(', ')}`);
 
-        // Check if we have sufficient data
-        const hasSufficientData = this.dataCollector.hasSufficientData(userData);
+        // ⭐ CRITICAL: Check if we have ANY real data (conversation OR Twitter)
+        const hasConversation = userData.conversationMemory && userData.conversationMemory.messageCount > 0;
+        const hasTwitter = userData.twitter && (userData.twitter.bio || userData.twitter.tweets.length > 0);
 
-        if (hasSufficientData) {
-          console.log('✅ Sufficient data available, proceeding with AI analysis...');
-
-          // Analyze personality from data
-          const analysis = await this.personalityAnalyzer.analyze(userData);
-
-          identityData = {
-            personalityType: analysis.personalityType,
-            customTagline: analysis.tagline,
-            customDescription: analysis.description,
-            // ⭐ Use detected categories from actual conversation data
-            // Priority: What they talk about > personality-based defaults
-            mainCategories: analysis.detectedCategories.length > 0
-              ? analysis.detectedCategories
-              : this.categoryMapper.getMainCategories(analysis.personalityType),
-            subCategories: analysis.detectedInterests,
-          };
-
-          // ⭐ Capture 2x2 metrics
-          dimensions = analysis.dimensions;
-
-          console.log(`✅ Analysis complete: ${identityData.personalityType}`);
-        } else {
-          console.log('⚠️  Insufficient data for AI analysis');
+        if (!hasConversation && !hasTwitter) {
+          console.log('⚠️  No conversation or Twitter data available');
 
           // In AUTO mode, fallback to manual Q&A
           if (mode === ExecutionMode.AUTO) {
-            console.log('🔄 Falling back to manual Q&A...');
+            console.log('🔄 Falling back to manual Q&A (no data available)...');
             usedManualQA = true;
           } else {
-            // DATA_ONLY mode - fail
-            throw new Error('Insufficient data and manual Q&A not enabled');
+            // DATA_ONLY mode - fail explicitly
+            throw new Error('No conversation or Twitter data available and manual Q&A not enabled');
+          }
+        } else {
+          // Check if we have sufficient data quality
+          const hasSufficientData = this.dataCollector.hasSufficientData(userData);
+
+          if (hasSufficientData) {
+            console.log('✅ Sufficient data available, proceeding with AI analysis...');
+
+            // Analyze personality from data
+            const analysis = await this.personalityAnalyzer.analyze(userData);
+
+            identityData = {
+              personalityType: analysis.personalityType,
+              customTagline: analysis.tagline,
+              customDescription: analysis.description,
+              // ⭐ Use detected categories from actual conversation data
+              // Priority: What they talk about > personality-based defaults
+              mainCategories: analysis.detectedCategories.length > 0
+                ? analysis.detectedCategories
+                : this.categoryMapper.getMainCategories(analysis.personalityType),
+              subCategories: analysis.detectedInterests,
+            };
+
+            // ⭐ Capture 2x2 metrics
+            dimensions = analysis.dimensions;
+
+            console.log(`✅ Analysis complete: ${identityData.personalityType}`);
+          } else {
+            console.log('⚠️  Insufficient data quality for AI analysis');
+
+            // In AUTO mode, fallback to manual Q&A
+            if (mode === ExecutionMode.AUTO) {
+              console.log('🔄 Falling back to manual Q&A...');
+              usedManualQA = true;
+            } else {
+              // DATA_ONLY mode - fail
+              throw new Error('Insufficient data and manual Q&A not enabled');
+            }
           }
         }
       } else {
