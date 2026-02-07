@@ -574,9 +574,9 @@ ${getPersonalityEmoji(identityData.personalityType)} **${identityData.personalit
 
 ${identityData.customDescription}
 
-**Categories**: ${identityData.mainCategories.join(', ')}
+**Categories**: ${identityData.mainCategories.join(' • ')}
 ${identityData.subCategories && identityData.subCategories.length > 0
-  ? `**Interests**: ${identityData.subCategories.join(', ')}\n`
+  ? `**Interests**: ${identityData.subCategories.join(' • ')}\n`
   : ''}
 ${metricsDisplay}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
