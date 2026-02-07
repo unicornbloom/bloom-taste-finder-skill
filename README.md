@@ -26,12 +26,21 @@ DASHBOARD_URL=https://preflight.bloomprotocol.ai
 BLOOM_API_URL=https://api.bloomprotocol.ai
 NETWORK=base-sepolia
 
-# Required for wallet encryption (generate a random secret)
+# Required for wallet encryption (CRITICAL: use a strong random secret!)
 WALLET_ENCRYPTION_SECRET=your_random_secret_here
 
 # Optional: Coinbase Developer Platform (for advanced wallet features)
 # CDP_API_KEY_ID=your_cdp_api_key_id
 # CDP_API_KEY_SECRET=your_cdp_api_key_secret
+```
+
+**Generate a strong encryption secret:**
+```bash
+# Option 1: Using Node.js
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# Option 2: Using OpenSSL
+openssl rand -hex 32
 ```
 
 ### Wallet Creation 🔐
@@ -40,21 +49,21 @@ This skill automatically creates **real wallets** for each user:
 
 - ✅ **Zero setup required** - Works out of the box
 - ✅ **Real wallets on Base** - Can send/receive funds
-- ⚠️ **Local storage** - Private keys stored locally (encryption planned post-hackathon)
+- ✅ **Encrypted storage** - Private keys secured with AES-256-GCM encryption
 - ✅ **Persistent** - Same user = same wallet across sessions
 - ✅ **No external API needed** - Fully standalone
 
 **How it works:**
 
 1. **Tier 1** (Recommended): Use Coinbase Developer Platform (CDP) credentials for production-grade wallets
-2. **Tier 2** (Auto-fallback): Create local wallets using viem - fully functional, persistent (TODO: add encryption)
+2. **Tier 2** (Auto-fallback): Create local wallets using viem - fully functional, encrypted with AES-256-GCM, persistent
 3. **Tier 3** (Display-only): Mock wallet for UI preview (no real transactions)
 
-**⚠️ Security Notice (Hackathon MVP):**
-- **Tier 2 local wallets** store private keys **unencrypted** in `.wallet-storage/user-wallets.json`
-- This is acceptable for hackathon/testing but **NOT production-ready**
-- Post-hackathon: Will implement AES-256-GCM encryption using `WALLET_ENCRYPTION_SECRET`
-- **For production use:** Use Tier 1 (CDP) wallets which are managed securely by Coinbase
+**🔐 Security:**
+- **Tier 2 local wallets** are encrypted with **AES-256-GCM** (industry standard)
+- Private keys never leave your server and are encrypted at rest
+- **CRITICAL**: Set a strong `WALLET_ENCRYPTION_SECRET` in your `.env` (see below)
+- Both Tier 1 (CDP) and Tier 2 (Local) are **production-ready**
 
 **Power users:** To use CDP wallets, add these to your `.env`:
 ```bash

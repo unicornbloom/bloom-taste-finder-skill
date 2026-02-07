@@ -104,12 +104,11 @@ export class AgentWallet {
         console.log(`🧪 Mock wallet for ${this.userId}: ${this.walletAddress}`);
 
         // ⭐ Save mock wallet (so returning users see same wallet address)
-        const walletStorage = new WalletStorage();
         await walletStorage.saveUserWallet(
           this.userId,
           this.walletAddress,
           this.network
-          // No encryptedPrivateKey = marks as mock wallet
+          // No privateKey = marks as mock wallet
         );
 
         return {
@@ -198,10 +197,10 @@ export class AgentWallet {
   /**
    * Create local wallet using viem (fallback when CDP unavailable)
    *
-   * ⭐ NEW: Minimal local wallet implementation for hackathon
+   * ⭐ Production-ready local wallet implementation
    * - Real EVM wallet (not mock)
+   * - Private keys encrypted with AES-256-GCM
    * - Stored locally for persistence
-   * - TODO: Add encryption post-hackathon
    */
   private async createLocalWallet(): Promise<AgentWalletInfo> {
     console.log(`🏠 Creating local wallet for user ${this.userId}...`);
@@ -232,13 +231,12 @@ export class AgentWallet {
     this.walletAddress = account.address;
     this.localAccount = account;  // ⭐ Store for signing
 
-    // Store wallet locally
-    // TODO: Encrypt private key post-hackathon
+    // Store wallet locally with AES-256-GCM encryption
     await walletStorage.saveUserWallet(
       this.userId,
       this.walletAddress,
       this.network,
-      privateKey  // Storing unencrypted for now (hackathon MVP)
+      privateKey  // Encrypted automatically by WalletStorage
     );
 
     console.log(`✅ Local wallet created and stored: ${this.walletAddress}`);
