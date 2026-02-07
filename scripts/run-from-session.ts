@@ -156,79 +156,66 @@ async function main() {
 function formatResult(result: any): void {
   const { identityData, agentWallet, recommendations, mode, dimensions, dashboardUrl } = result;
 
-  const modeEmoji = '🤖';
-
-  // Top border
-  console.log('\n═══════════════════════════════════════════════════════');
-  console.log(`🎉 Your Bloom Identity Card is ready! ${modeEmoji}`);
-  console.log('═══════════════════════════════════════════════════════\n');
+  // Clean Markdown format that OpenClaw won't reformat
+  console.log('\n---\n');
+  console.log('# 🌸 Your Bloom Supporter Identity\n');
 
   // Dashboard URL first (most important)
   if (dashboardUrl) {
-    console.log('🔗 VIEW YOUR IDENTITY CARD:\n');
-    console.log(`   ${dashboardUrl}\n`);
+    console.log(`**[→ View Your Full Identity Card](${dashboardUrl})**\n`);
   }
 
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
   // Personality (real data from analysis)
-  console.log(`${getPersonalityEmoji(identityData.personalityType)} ${identityData.personalityType}`);
-  console.log(`💬 "${identityData.customTagline}"\n`);
+  console.log(`## ${getPersonalityEmoji(identityData.personalityType)} ${identityData.personalityType}\n`);
+  console.log(`> *"${identityData.customTagline}"*\n`);
   console.log(`${identityData.customDescription}\n`);
 
   // Categories (real data)
-  console.log(`🏷️  Categories: ${identityData.mainCategories.join(' · ')}`);
+  console.log(`**Categories**: ${identityData.mainCategories.join(' · ')}`);
   if (identityData.subCategories && identityData.subCategories.length > 0) {
-    console.log(`   Interests: ${identityData.subCategories.slice(0, 5).join(' · ')}`);
+    console.log(`**Interests**: ${identityData.subCategories.slice(0, 5).join(' · ')}`);
   }
   console.log('');
 
-  // 2x2 Metrics (NO data quality shown)
+  // 2x2 Metrics (ALWAYS shown - real data)
   if (dimensions) {
     const isCultivator = identityData.personalityType === 'The Cultivator';
 
-    console.log('📊 2x2 Dimensions:');
-    console.log(`   Conviction: ${dimensions.conviction}/100`);
-    console.log(`   Intuition: ${dimensions.intuition}/100`);
+    console.log('## 📊 Your Dimensions\n');
+    console.log(`- **Conviction**: ${dimensions.conviction}/100`);
+    console.log(`- **Intuition**: ${dimensions.intuition}/100`);
 
     // Only show contribution for The Cultivator
     if (isCultivator) {
-      console.log(`   Contribution: ${dimensions.contribution}/100`);
+      console.log(`- **Contribution**: ${dimensions.contribution}/100`);
     }
     console.log('');
   }
 
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
-  // Skills (real recommendations from ClawHub)
+  // Skills (real recommendations from ClawHub + GitHub)
   if (recommendations && recommendations.length > 0) {
-    console.log(`🎯 Top ${Math.min(5, recommendations.length)} Recommended Skills:\n`);
+    console.log('## 🎯 Recommended Tools\n');
     recommendations.slice(0, 5).forEach((skill: any, i: number) => {
-      const creatorInfo = skill.creator ? ` · by ${skill.creator}` : '';
-      console.log(`${i + 1}. ${skill.skillName} (${skill.matchScore}% match)${creatorInfo}`);
-      console.log(`   ${skill.description}`);
-      if (skill.url) {
-        console.log(`   → ${skill.url}`);
-      }
-      console.log('');
+      const creatorInfo = skill.creator ? ` *by ${skill.creator}*` : '';
+      const source = skill.source || 'ClawHub';
+      console.log(`**${i + 1}. [${skill.skillName}](${skill.url})** (${skill.matchScore}% match)${creatorInfo} · *${source}*`);
+      console.log(`   ${skill.description}\n`);
     });
   } else {
-    console.log('🎯 Skill Recommendations:\n');
-    console.log('   No matching skills found at this time\n');
+    console.log('## 🎯 Recommended Tools\n');
+    console.log('*No matching tools found at this time*\n');
   }
 
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
   // Wallet info with marketing message
-  console.log('🤖 Your Agent Wallet Created\n');
-  console.log(`   Network: ${agentWallet?.network || 'Base'}`);
-  console.log('   Status: ✅ Wallet generated and registered\n');
-  console.log('   💡 Use your agent wallet to tip skill creators!');
-  console.log('   ⚠️  Tipping, payments, and management features coming soon');
-  console.log('   🔒 Do not deposit funds - withdrawals not ready yet\n');
+  console.log('## 🤖 Your Agent Wallet\n');
+  console.log(`- **Network**: ${agentWallet?.network || 'Base'}`);
+  console.log('- **Status**: ✅ Generated and registered\n');
+  console.log('> 💡 Use your agent wallet to tip creators!');
+  console.log('> ⚠️ Tipping features coming soon');
+  console.log('> 🔒 Do not deposit funds yet\n');
 
-  console.log('═══════════════════════════════════════════════════════\n');
-  console.log('🌸 Bloom Identity · Built with @openclaw @coinbase @base\n');
+  console.log('---\n');
+  console.log('*🌸 Built by [Bloom Protocol](https://bloomprotocol.ai) · Powered by @openclaw @coinbase @base*\n');
 }
 
 function getPersonalityEmoji(type: string): string {
