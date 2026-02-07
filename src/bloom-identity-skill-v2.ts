@@ -126,6 +126,18 @@ export class BloomIdentitySkillV2 {
       intuition: number;
       contribution: number;
     };
+    actions?: {
+      share?: {
+        url: string;
+        text: string;
+        hashtags: string[];
+      };
+      save?: {
+        prompt: string;
+        registerUrl: string;
+        loginUrl: string;
+      };
+    };
     error?: string;
     needsManualInput?: boolean;
     manualQuestions?: string;
@@ -254,26 +266,11 @@ export class BloomIdentitySkillV2 {
         agentUserId = registration.agentUserId;
         console.log(`✅ Agent registered with identity card! User ID: ${agentUserId}`);
 
-        // Generate auth token for dashboard access
-        console.log('🔑 Generating authentication token...');
-        const authToken = await this.agentWallet!.generateAuthToken({
-          agentUserId,
-          identityData: {
-            personalityType: identityData!.personalityType,
-            tagline: identityData!.customTagline,
-            description: identityData!.customDescription,
-            mainCategories: identityData!.mainCategories,
-            subCategories: identityData!.subCategories,
-            confidence: dataQuality,
-            mode: usedManualQA ? 'manual' : 'data',
-          },
-        });
-
-        // Create permanent dashboard URL with auth token
-        console.log('🔗 Creating authenticated dashboard URL...');
+        // Create permanent public dashboard URL (no auth required)
+        console.log('🔗 Creating public dashboard URL...');
         const baseUrl = process.env.DASHBOARD_URL || 'https://preflight.bloomprotocol.ai';
-        dashboardUrl = `${baseUrl}/agents/${agentUserId}?token=${authToken}`;
-        console.log(`✅ Authenticated URL created`);
+        dashboardUrl = `${baseUrl}/agents/${agentUserId}`;
+        console.log(`✅ Public URL created: ${dashboardUrl}`);
       } catch (error) {
         console.warn('⚠️  Bloom registration failed (skipping dashboard link):', error);
       }
@@ -302,6 +299,13 @@ export class BloomIdentitySkillV2 {
       // Success!
       console.log('🎉 Bloom Identity generation complete!');
 
+      // Prepare share data for frontend buttons
+      const shareData = dashboardUrl ? {
+        url: dashboardUrl,
+        text: `Just discovered my Bloom Identity: ${identityData!.personalityType}! 🌸\n\nCheck out my personalized skill recommendations on @bloomprotocol 🚀`,
+        hashtags: ['BloomProtocol', 'Web3Identity', 'OpenClaw'],
+      } : undefined;
+
       return {
         success: true,
         mode: usedManualQA ? 'manual' : 'data',
@@ -312,6 +316,16 @@ export class BloomIdentitySkillV2 {
         shareUrl,
         dataQuality,
         dimensions, // ⭐ Include 2x2 metrics in result
+        // ⭐ Frontend action buttons data
+        actions: {
+          share: shareData, // For "Share on X" button
+          save: dashboardUrl ? {
+            // For "Save to Collection" button
+            prompt: 'Save this card to your Bloom collection',
+            registerUrl: `${process.env.DASHBOARD_URL || 'https://preflight.bloomprotocol.ai'}/register?return=${encodeURIComponent(dashboardUrl)}`,
+            loginUrl: `${process.env.DASHBOARD_URL || 'https://preflight.bloomprotocol.ai'}/login?return=${encodeURIComponent(dashboardUrl)}`,
+          } : undefined,
+        },
       };
     } catch (error) {
       console.error('❌ Error generating Bloom Identity:', error);
@@ -483,7 +497,7 @@ ${contributionLine}
   return `
 🎉 **Your Bloom Identity Card is Ready!** ${modeEmoji}
 
-${result.dashboardUrl ? `🌐 **View Your Card**\n→ ${result.dashboardUrl}\n` : ''}
+${result.dashboardUrl ? `🌐 **View Your Card**\n→ ${result.dashboardUrl}\n\n💾 Save to your collection or share on X from the dashboard!\n` : ''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ${getPersonalityEmoji(identityData.personalityType)} **${identityData.personalityType}**
