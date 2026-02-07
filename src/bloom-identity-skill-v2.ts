@@ -111,6 +111,7 @@ export class BloomIdentitySkillV2 {
       mode?: ExecutionMode;
       skipShare?: boolean; // Twitter share is optional
       manualAnswers?: ManualAnswer[]; // If already collected
+      conversationText?: string; // ⭐ NEW: Direct conversation text from OpenClaw bot
     }
   ): Promise<{
     success: boolean;
@@ -156,9 +157,21 @@ export class BloomIdentitySkillV2 {
       if (mode !== ExecutionMode.MANUAL) {
         console.log('📊 Step 1: Attempting data collection...');
 
-        const userData = await this.dataCollector.collect(userId, {
-          // Default: Conversation + Twitter only (no wallet analysis)
-        });
+        // ⭐ NEW: If conversationText is provided, use it directly
+        let userData;
+        if (options?.conversationText) {
+          console.log('✅ Using provided conversation text (OpenClaw bot context)');
+          userData = await this.dataCollector.collectFromConversationText(
+            userId,
+            options.conversationText,
+            { skipTwitter: options.skipShare }
+          );
+        } else {
+          // Original: Collect from session files
+          userData = await this.dataCollector.collect(userId, {
+            // Default: Conversation + Twitter only (no wallet analysis)
+          });
+        }
 
         dataQuality = this.dataCollector.getDataQualityScore(userData);
         console.log(`📊 Data quality score: ${dataQuality}/100`);

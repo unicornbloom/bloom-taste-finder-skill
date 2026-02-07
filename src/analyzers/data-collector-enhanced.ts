@@ -89,6 +89,74 @@ export interface UserData {
 
 export class EnhancedDataCollector {
   /**
+   * ⭐ NEW: Collect data from provided conversation text (OpenClaw bot context)
+   *
+   * This method is used when OpenClaw bot provides the conversation directly,
+   * avoiding the need to read session files.
+   */
+  async collectFromConversationText(
+    userId: string,
+    conversationText: string,
+    options?: {
+      skipTwitter?: boolean;
+    }
+  ): Promise<UserData> {
+    console.log(`📊 Collecting data from provided conversation text`);
+
+    const userData: UserData = {
+      sources: [],
+      permissions: {
+        twitter: false,
+        conversation: true, // We have conversation directly
+      },
+      dataQuality: {
+        twitter: 'none',
+        conversation: 'real',
+      },
+    };
+
+    // Analyze the provided conversation text
+    try {
+      const analysis = this.analyzeConversationText(conversationText);
+
+      userData.conversationMemory = {
+        topics: analysis.topics,
+        interests: analysis.interests,
+        preferences: analysis.preferences,
+        history: analysis.history,
+        messageCount: analysis.messageCount,
+      };
+
+      userData.sources.push('Conversation');
+      console.log(`✅ Analyzed conversation: ${analysis.messageCount} messages, ${analysis.topics.length} topics`);
+    } catch (error) {
+      console.warn('⚠️  Failed to analyze conversation text:', error);
+    }
+
+    // Optionally collect Twitter data
+    if (!options?.skipTwitter) {
+      try {
+        const hasPermission = await this.checkTwitterPermission(userId);
+        userData.permissions.twitter = hasPermission;
+
+        if (hasPermission) {
+          userData.twitter = await this.collectTwitterData(userId);
+
+          if (userData.twitter.bio || userData.twitter.tweets.length > 0) {
+            userData.sources.push('Twitter');
+            userData.dataQuality.twitter = 'real';
+            console.log('✅ Twitter data collected (real data)');
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️  Twitter data unavailable:', error);
+      }
+    }
+
+    return userData;
+  }
+
+  /**
    * Collect all available user data with permission handling
    *
    * Default: Only collects Conversation + Twitter (if authorized)
@@ -382,6 +450,148 @@ export class EnhancedDataCollector {
     }
 
     return true;
+  }
+
+  /**
+   * ⭐ NEW: Analyze conversation text directly
+   *
+   * Similar to OpenClawSessionReader but works on provided text
+   */
+  private analyzeConversationText(conversationText: string): {
+    topics: string[];
+    interests: string[];
+    preferences: string[];
+    history: string[];
+    messageCount: number;
+  } {
+    // Split conversation into messages (simple heuristic)
+    const messages = conversationText
+      .split(/\n(?=User:|Assistant:|Human:|AI:)/i)
+      .filter(line => line.trim().length > 0);
+
+    const messageCount = messages.length;
+
+    if (messageCount < 3) {
+      throw new Error(
+        `Insufficient conversation data: ${messageCount} messages found (minimum 3 required)`
+      );
+    }
+
+    // Extract user messages (their input reveals interests)
+    const userMessages = messages
+      .filter(msg => /^(User|Human):/i.test(msg))
+      .map(msg => msg.replace(/^(User|Human):/i, '').trim());
+
+    const allText = conversationText.toLowerCase();
+
+    // Extract topics (common themes)
+    const topics = this.extractTopicsFromText(userMessages.join(' '));
+
+    // Extract interests
+    const interests = this.extractInterestsFromText(userMessages.join(' '));
+
+    // Extract preferences
+    const preferences = this.extractPreferencesFromText(userMessages.join(' '));
+
+    // Get recent conversation snippets
+    const recentMessages = messages.slice(-10).map(m => m.slice(0, 200));
+
+    return {
+      topics,
+      interests,
+      preferences,
+      history: recentMessages,
+      messageCount,
+    };
+  }
+
+  /**
+   * Extract topics from text
+   */
+  private extractTopicsFromText(text: string): string[] {
+    const topics: string[] = [];
+    const lowerText = text.toLowerCase();
+
+    const topicPatterns: Record<string, string[]> = {
+      'AI Tools': ['ai', 'gpt', 'llm', 'chatbot', 'machine learning', 'neural network'],
+      'Crypto': ['crypto', 'blockchain', 'defi', 'web3', 'token', 'nft', 'dao'],
+      'Productivity': ['productivity', 'workflow', 'automation', 'task', 'efficiency'],
+      'Wellness': ['wellness', 'health', 'fitness', 'meditation', 'mindfulness'],
+      'Education': ['education', 'learning', 'course', 'tutorial', 'teach'],
+      'Development': ['development', 'coding', 'programming', 'software', 'engineering'],
+      'Marketing': ['marketing', 'growth', 'seo', 'content', 'advertising'],
+      'Finance': ['finance', 'investing', 'trading', 'money', 'wealth'],
+      'Design': ['design', 'ui', 'ux', 'creative', 'art'],
+      'Social': ['social', 'community', 'networking', 'collaboration'],
+    };
+
+    for (const [topic, keywords] of Object.entries(topicPatterns)) {
+      const matches = keywords.filter(kw => lowerText.includes(kw)).length;
+      if (matches >= 2) {
+        topics.push(topic);
+      }
+    }
+
+    return topics;
+  }
+
+  /**
+   * Extract interests from text
+   */
+  private extractInterestsFromText(text: string): string[] {
+    const interests = new Set<string>();
+    const lowerText = text.toLowerCase();
+
+    const interestKeywords = [
+      'ai tools', 'machine learning', 'crypto', 'defi', 'nft',
+      'productivity', 'automation', 'workflow', 'task management',
+      'wellness', 'health', 'fitness', 'meditation',
+      'education', 'learning', 'courses', 'tutorials',
+      'web3', 'blockchain', 'smart contracts', 'dao',
+      'design', 'ui/ux', 'creative', 'art',
+      'marketing', 'growth', 'seo', 'content',
+      'development', 'coding', 'programming',
+      'investing', 'trading', 'finance',
+    ];
+
+    for (const keyword of interestKeywords) {
+      if (lowerText.includes(keyword)) {
+        interests.add(
+          keyword.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+        );
+      }
+    }
+
+    return Array.from(interests).slice(0, 15);
+  }
+
+  /**
+   * Extract preferences from text
+   */
+  private extractPreferencesFromText(text: string): string[] {
+    const preferences: string[] = [];
+    const lowerText = text.toLowerCase();
+
+    const preferencePatterns: Record<string, string[]> = {
+      'early stage': ['early stage', 'pre-launch', 'new project', 'just started'],
+      'established': ['established', 'proven', 'mature', 'reliable'],
+      'open source': ['open source', 'open-source', 'oss', 'github'],
+      'user-friendly': ['user-friendly', 'easy to use', 'simple', 'intuitive'],
+      'technical': ['technical', 'advanced', 'complex', 'detailed'],
+      'community-driven': ['community', 'collaborative', 'social'],
+      'data-driven': ['data-driven', 'analytics', 'metrics', 'statistics'],
+      'innovative': ['innovative', 'cutting-edge', 'novel', 'breakthrough'],
+      'affordable': ['affordable', 'cheap', 'free', 'budget'],
+      'premium': ['premium', 'high-quality', 'professional', 'enterprise'],
+    };
+
+    for (const [preference, keywords] of Object.entries(preferencePatterns)) {
+      if (keywords.some(kw => lowerText.includes(kw))) {
+        preferences.push(preference);
+      }
+    }
+
+    return preferences;
   }
 
   /**
