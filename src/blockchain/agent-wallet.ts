@@ -408,7 +408,7 @@ export class AgentWallet {
         matchScore: number;
         creator?: string;
         creatorUserId?: number | string;
-        source?: 'ClawHub' | 'GitHub';
+        source?: 'ClawHub' | 'ClaudeCode' | 'GitHub';
         stars?: number;
         language?: string;
       }>;
@@ -607,7 +607,7 @@ export class AgentWallet {
         matchScore: number;
         creator?: string;
         creatorUserId?: number | string;
-        source?: 'ClawHub' | 'GitHub';
+        source?: 'ClawHub' | 'ClaudeCode' | 'GitHub';
         stars?: number;
         language?: string;
       }>;

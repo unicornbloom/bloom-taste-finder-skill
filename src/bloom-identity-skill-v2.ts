@@ -17,6 +17,7 @@ import { walletStorage } from './blockchain/wallet-storage';
 import { mintIdentitySbt } from './blockchain/identity-sbt';
 import { TwitterShare, createTwitterShare } from './integrations/twitter-share';
 import { ClawHubClient, createClawHubClient } from './integrations/clawhub-client';
+import { ClaudeCodeClient, createClaudeCodeClient } from './integrations/claude-code-client';
 import { GitHubRecommendations } from './github-recommendations';
 import { PersonalityType } from './types/personality';
 
@@ -65,6 +66,7 @@ export class BloomIdentitySkillV2 {
   private agentWallet: AgentWallet | null = null;
   private twitterShare: TwitterShare;
   private clawHubClient: ClawHubClient;
+  private claudeCodeClient: ClaudeCodeClient;
   private githubRecommendations: GitHubRecommendations;
 
   constructor() {
@@ -74,6 +76,7 @@ export class BloomIdentitySkillV2 {
     this.categoryMapper = new CategoryMapper();
     this.twitterShare = createTwitterShare();
     this.clawHubClient = createClawHubClient();
+    this.claudeCodeClient = createClaudeCodeClient();
     this.githubRecommendations = new GitHubRecommendations(process.env.GITHUB_TOKEN);
   }
 
@@ -470,19 +473,20 @@ export class BloomIdentitySkillV2 {
     console.log(`🔍 Searching for recommendations matching ${identity.personalityType}...`);
 
     try {
-      // Search both sources in parallel
-      const [clawHubSkills, githubRepos] = await Promise.all([
+      // Search all sources in parallel
+      const [clawHubSkills, claudeCodeSkills, githubRepos] = await Promise.all([
         this.getClawHubRecommendations(identity),
+        this.getClaudeCodeRecommendations(identity),
         this.getGitHubRecommendations(identity),
       ]);
 
       // Merge results (keep all for categorized display)
-      const allRecommendations = [...clawHubSkills, ...githubRepos];
+      const allRecommendations = [...clawHubSkills, ...claudeCodeSkills, ...githubRepos];
 
       // Sort by match score within each source
       allRecommendations.sort((a, b) => b.matchScore - a.matchScore);
 
-      console.log(`✅ Found ${clawHubSkills.length} ClawHub + ${githubRepos.length} GitHub recommendations`);
+      console.log(`✅ Found ${clawHubSkills.length} ClawHub + ${claudeCodeSkills.length} Claude Code + ${githubRepos.length} GitHub recommendations`);
       console.log(`   Returning ${allRecommendations.length} total (categorized by source)`);
 
       return allRecommendations;
@@ -538,6 +542,32 @@ export class BloomIdentitySkillV2 {
 
     } catch (error) {
       console.error('⚠️  ClawHub search failed:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get recommendations from Claude Code (Official Anthropic + Community)
+   */
+  private async getClaudeCodeRecommendations(identity: IdentityData): Promise<SkillRecommendation[]> {
+    try {
+      const claudeCodeSkills = await this.claudeCodeClient.getRecommendations({
+        mainCategories: identity.mainCategories,
+        subCategories: identity.subCategories,
+        limit: 10,
+      });
+
+      // Convert to our SkillRecommendation format
+      return claudeCodeSkills.map(skill => ({
+        skillName: skill.skillName,
+        matchScore: 85, // High score for official tools
+        description: skill.description,
+        url: skill.url,
+        creator: skill.creator,
+        source: 'ClaudeCode' as const,
+      }));
+    } catch (error) {
+      console.error('⚠️  Claude Code search failed:', error);
       return [];
     }
   }
