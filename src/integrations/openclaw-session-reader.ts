@@ -87,7 +87,11 @@ export class OpenClawSessionReader {
 
     // Look for session key: agent:main:{userId}
     const sessionKey = `agent:main:${userId}`;
-    const sessionId = sessionsMeta[sessionKey]?.sessionId;
+    let sessionId = sessionsMeta[sessionKey]?.sessionId;
+    if (!sessionId) {
+      // Fallback to default main session
+      sessionId = sessionsMeta['agent:main:main']?.sessionId;
+    }
 
     return sessionId || null;
   }
