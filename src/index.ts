@@ -17,6 +17,7 @@ program
   .requiredOption('--user-id <userId>', 'OpenClaw user ID')
   .option('--mode <mode>', 'Execution mode: auto, manual, or hybrid', 'auto')
   .option('--skip-share', 'Skip Twitter share link generation', false)
+  .option('--mint-to-base', 'Mint identity card as SBT on Base', false)
   .parse(process.argv);
 
 const options = program.opts();
@@ -31,6 +32,7 @@ async function main() {
     const result = await skill.execute(options.userId, {
       mode: options.mode as ExecutionMode,
       skipShare: options.skipShare,
+      mintToBase: options.mintToBase,
     });
 
     if (!result.success) {
@@ -54,7 +56,7 @@ async function main() {
 }
 
 function formatResult(result: any): void {
-  const { identityData, agentWallet, recommendations, mode, dimensions, dashboardUrl } = result;
+  const { identityData, agentWallet, recommendations, mode, dimensions, dashboardUrl, actions } = result;
 
   const modeEmoji = mode === 'manual' ? '📝' : '🤖';
 
@@ -119,6 +121,15 @@ function formatResult(result: any): void {
   console.log('   💡 Use your agent wallet to tip skill creators!');
   console.log('   ⚠️  Tipping, payments, and management features coming soon');
   console.log('   🔒 Do not deposit funds - withdrawals not ready yet\n');
+
+  if (actions?.mint) {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    console.log('🪪 SBT Minted on Base:\n');
+    console.log(`   Contract: ${actions.mint.contractAddress}`);
+    console.log(`   Tx: ${actions.mint.txHash}`);
+    console.log(`   Network: ${actions.mint.network}`);
+    console.log('');
+  }
 
   console.log('═══════════════════════════════════════════════════════\n');
   console.log(`${mode === 'manual' ? '📝 Q&A' : '🤖 On-chain'} • @openclaw @coinbase @base 🦞\n`);

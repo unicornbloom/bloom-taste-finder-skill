@@ -13,6 +13,8 @@ import { EnhancedDataCollector } from './analyzers/data-collector-enhanced';
 import { ManualQAFallback, ManualAnswer } from './analyzers/manual-qa-fallback';
 import { CategoryMapper } from './analyzers/category-mapper';
 import { AgentWallet, AgentWalletInfo } from './blockchain/agent-wallet';
+import { walletStorage } from './blockchain/wallet-storage';
+import { mintIdentitySbt } from './blockchain/identity-sbt';
 import { TwitterShare, createTwitterShare } from './integrations/twitter-share';
 import { ClawHubClient, createClawHubClient } from './integrations/clawhub-client';
 import { GitHubRecommendations } from './github-recommendations';
@@ -119,6 +121,7 @@ export class BloomIdentitySkillV2 {
       skipShare?: boolean; // Twitter share is optional
       manualAnswers?: ManualAnswer[]; // If already collected
       conversationText?: string; // ⭐ NEW: Direct conversation text from OpenClaw bot
+      mintToBase?: boolean; // ⭐ Optional: mint SBT on Base
     }
   ): Promise<{
     success: boolean;
@@ -145,6 +148,12 @@ export class BloomIdentitySkillV2 {
         registerUrl: string;
         loginUrl: string;
       };
+      mint?: {
+        contractAddress: string;
+        tokenUri: string;
+        txHash: string;
+        network: string;
+      };
     };
     error?: string;
     needsManualInput?: boolean;
@@ -160,6 +169,7 @@ export class BloomIdentitySkillV2 {
       let dataQuality = 0;
       let usedManualQA = false;
       let dimensions: { conviction: number; intuition: number; contribution: number } | undefined;
+      let mintAction: { contractAddress: string; tokenUri: string; txHash: string; network: string } | undefined;
 
       if (mode !== ExecutionMode.MANUAL) {
         console.log('📊 Step 1: Attempting data collection...');
@@ -363,6 +373,39 @@ export class BloomIdentitySkillV2 {
         hashtags: ['BloomProtocol', 'Web3Identity', 'OpenClaw'],
       } : undefined;
 
+      // Optional: Mint SBT on Base
+      if (options?.mintToBase) {
+        try {
+          const contractAddress = process.env.SBT_CONTRACT_ADDRESS as `0x${string}` | undefined;
+          if (!contractAddress) {
+            throw new Error('SBT_CONTRACT_ADDRESS not set');
+          }
+
+          const walletRecord = await walletStorage.getUserWallet(userId);
+          if (!walletRecord?.privateKey) {
+            throw new Error('No local private key available for minting');
+          }
+
+          const tokenUri = this.buildTokenUri(identityData!, agentWallet, dashboardUrl);
+          const txHash = await mintIdentitySbt({
+            contractAddress,
+            to: agentWallet.address as `0x${string}`,
+            tokenUri,
+            network: agentWallet.network as 'base-mainnet' | 'base-sepolia',
+            privateKey: walletRecord.privateKey as `0x${string}`,
+          });
+
+          mintAction = {
+            contractAddress,
+            tokenUri,
+            txHash,
+            network: agentWallet.network,
+          };
+        } catch (error) {
+          console.warn('⚠️  SBT mint failed (skipping):', error);
+        }
+      }
+
       return {
         success: true,
         mode: usedManualQA ? 'manual' : 'data',
@@ -382,6 +425,7 @@ export class BloomIdentitySkillV2 {
             registerUrl: `${process.env.DASHBOARD_URL || 'https://preflight.bloomprotocol.ai'}/register?return=${encodeURIComponent(dashboardUrl)}`,
             loginUrl: `${process.env.DASHBOARD_URL || 'https://preflight.bloomprotocol.ai'}/login?return=${encodeURIComponent(dashboardUrl)}`,
           } : undefined,
+          mint: mintAction,
         },
       };
     } catch (error) {
@@ -392,6 +436,28 @@ export class BloomIdentitySkillV2 {
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
+  }
+
+  private buildTokenUri(identity: IdentityData, wallet: AgentWalletInfo, dashboardUrl?: string): string {
+    const metadata = {
+      name: `Bloom Identity — ${identity.personalityType}`,
+      description: identity.customDescription,
+      image: dashboardUrl || undefined,
+      attributes: [
+        { trait_type: 'Personality', value: identity.personalityType },
+        { trait_type: 'Main Categories', value: identity.mainCategories.join(', ') },
+        { trait_type: 'Sub Categories', value: identity.subCategories.join(', ') },
+      ],
+      properties: {
+        wallet: wallet.address,
+        network: wallet.network,
+        dashboardUrl,
+      },
+    };
+
+    const json = JSON.stringify(metadata);
+    const base64 = Buffer.from(json).toString('base64');
+    return `data:application/json;base64,${base64}`;
   }
 
   /**
