@@ -1,8 +1,8 @@
-# 🌸 Bloom Supporter Identity
+# 🎨 Bloom Taste Finder
 
-**Discover your crypto supporter personality—straight from your conversation.**
+**AI skill that analyzes user preferences and recommends tools based on their unique taste.**
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue)](https://github.com/unicornbloom/bloom-identity-skill)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue)](https://github.com/unicornbloom/bloom-taste-skill)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-Compatible-green)](https://openclaw.ai)
 [![ClawHub](https://img.shields.io/badge/ClawHub-Published-purple)](https://clawhub.ai/skills/bloom)
 [![License](https://img.shields.io/badge/license-MIT-orange)](LICENSE)
@@ -11,11 +11,19 @@
 
 ## 🎯 What Is This?
 
-**Bloom Supporter Identity** reveals your crypto supporter archetype through conversation analysis.
+**Bloom Taste Finder** helps AI agents understand user taste and recommend the right tools, projects, and skills based on unique preferences and personality.
 
-Are you a **Visionary** who backs bold ideas early? An **Explorer** discovering new ecosystems? A **Cultivator** building communities? An **Optimizer** refining what works? Or an **Innovator** pushing boundaries?
+Unlike traditional recommendation systems that rely on popularity, Bloom Taste Finder analyzes nuanced patterns in user behavior to understand their unique "taste" — then finds and matches them with tools they'll genuinely love.
 
-Find out in seconds. No wallet signatures. No Twitter auth. Just conversation intelligence.
+**Key Features:**
+- 🎴 **8 Personality Types** – Discover your taste archetype (The Trailblazer, The Curator, etc.)
+- 🎯 **Taste-Based Recommendations** – Get personalized tool suggestions from 3 sources:
+  - ClawHub Skills (200+ community-created AI agent skills)
+  - Claude Code (Official Anthropic + 6 community repositories)
+  - GitHub Repositories (1000+ open source projects)
+- 📊 **Taste Profile** – Understand your preferences beyond simple keywords
+- 🔗 **Shareable Identity Card** – Showcase your taste profile
+- 🤖 **Agent-Ready** – Works with Claude Code, OpenClaw, and other AI agents
 
 ---
 
@@ -49,81 +57,98 @@ npx tsx scripts/run-from-session.ts \
 
 ---
 
-## 🌟 Why Bloom Supporter Identity?
+## 🌟 Why Bloom Taste Finder?
 
-### For Early Adopters
-Finally, a way to prove you were there first—not through wallet history, but through **conviction**. Your supporter card shows what you care about and why you back it.
+### For AI Agents
+Help your users discover tools they'll actually love — not just popular ones, but tools that match their unique taste and personality.
 
-### For Builders
-Discover users' supporter types to:
-- Design better incentives
-- Match users with relevant opportunities
-- Build communities around shared values
+### For Users
+- **Save Time** – No need to browse hundreds of tools
+- **Truly Personalized** – Goes beyond popularity to match individual taste
+- **Multi-Source** – Aggregates from ClawHub, Claude Code, and GitHub (200+ sources total)
+- **Nuanced Understanding** – Analyzes personality, not just keywords
 
-### For Communities
-Segment supporters by archetype:
-- Rally **Visionaries** for bold launches
-- Activate **Cultivators** for community growth
-- Engage **Optimizers** for feedback loops
+### For Developers
+- **Easy Integration** – Simple CLI command or API call
+- **High Quality** – Curated from trusted sources (Anthropic, ClawHub, GitHub)
+- **Open Source** – Audit the taste algorithm yourself
+- **Free to Use** – Open for all AI agents
 
 ---
 
-## 📊 The 5 Supporter Types
+## 📊 The 8 Personality Types
 
-| Type | Tagline | Dimensions | Archetype |
-|------|---------|------------|-----------|
-| 💜 **Visionary** | First to back what's next | High conviction, High intuition | Backs bold ideas early |
-| 🔵 **Explorer** | Discovers new frontiers | Low conviction, High intuition | Experiments widely |
-| 💚 **Cultivator** | Builds lasting communities | Low conviction, Low intuition | Nurtures ecosystems |
-| 🟡 **Optimizer** | Refines what works | High conviction, Low intuition | Doubles down on winners |
-| 🔴 **Innovator** | Pushes boundaries | Balanced dimensions | Combines conviction + discovery |
+Bloom Taste Finder maps users to one of 8 distinct taste archetypes:
+
+| Type | Tagline | Characteristics |
+|------|---------|-----------------|
+| 🚀 **The Trailblazer** | First to back new tech | Early adopter, high conviction, intuitive |
+| 🔍 **The Explorer** | Discovers new frontiers | Wide experimentation, curious, open-minded |
+| 🌱 **The Cultivator** | Builds lasting communities | Community-focused, nurturing, patient |
+| ⚡ **The Optimizer** | Refines what works | Evidence-driven, analytical, efficient |
+| 💡 **The Innovator** | Pushes boundaries | Creative, experimental, boundary-pushing |
+| 🎯 **The Specialist** | Deep dives into niches | Focused expertise, depth over breadth |
+| 🌐 **The Connector** | Bridges communities | Network builder, collaborative, social |
+| 📚 **The Curator** | Filters signal from noise | Quality-focused, discerning, selective |
 
 ---
 
 ## 🎁 What You Get
 
-Your personalized **Bloom Supporter Identity Card** includes:
+Your personalized **Bloom Taste Profile** includes:
 
-- **🎴 Supporter Type** – Your archetype (Visionary, Explorer, etc.)
-- **💬 Custom Tagline** – A one-liner that captures your style
-- **📊 2x2 Dimensions** – Conviction vs. Intuition scores
-- **🏷️ Top Categories** – AI Tools, DeFi, NFTs, DAOs—where you focus
-- **🎯 Skill Recommendations** – Top 5 OpenClaw skills matched to your profile
-- **🔗 Shareable Dashboard** – Show off your identity on-chain
-- **🤖 Agent Wallet** – Ready for X402 payments (Coinbase CDP on Base)
+- **🎴 Personality Type** – Your taste archetype (The Trailblazer, The Curator, etc.)
+- **💬 Custom Tagline** – A one-liner that captures your taste
+- **📊 Taste Dimensions** – Conviction, Intuition, and Contribution scores
+- **🏷️ Main Categories** – AI Tools, Productivity, Wellness, Education, Crypto, Lifestyle
+- **🎯 Personalized Recommendations** – From 3 sources:
+  - ClawHub Skills (200+ AI agent skills)
+  - Claude Code (Official Anthropic + community skills)
+  - GitHub Repositories (1000+ open source projects)
+- **🔗 Shareable Dashboard** – Showcase your taste profile
+- **🤖 Agent Wallet** – Ready for blockchain interactions (Coinbase CDP on Base)
 
 ---
 
 ## 🚀 How It Works
 
-### 1. Conversation Analysis
-We analyze your last ~120 messages in OpenClaw to understand:
-- **What excites you** (AI? DeFi? Governance?)
-- **How you engage** (deep dives vs. quick experiments)
-- **Your supporter archetype** (first-in or wait-and-see?)
+### 1. GitHub Activity Analysis
+Bloom analyzes your GitHub profile to understand:
+- **What you star and contribute to** – Repositories and projects you support
+- **Languages and frameworks** – Technologies you work with
+- **Collaboration patterns** – How you engage with the community
+- **Trending topics** – Emerging areas you follow
 
-### 2. Supporter Type Detection
-Using a 2x2 framework (Conviction × Intuition), we map you to one of 5 archetypes:
-- **Visionary**: High conviction + High intuition
-- **Explorer**: Low conviction + High intuition
-- **Cultivator**: Low conviction + Low intuition
-- **Optimizer**: High conviction + Low intuition
-- **Innovator**: Balanced (crosses quadrants)
+### 2. Taste Profile Generation
+Using multiple dimensions (Conviction × Intuition × Contribution), we map you to one of 8 personality types and identify your main interest categories:
+- **AI Tools** – Agent frameworks, AI development tools
+- **Productivity** – Workflow automation, productivity apps
+- **Wellness** – Health tech, mindfulness tools
+- **Education** – Learning platforms, educational resources
+- **Crypto** – DeFi, NFTs, blockchain projects
+- **Lifestyle** – Consumer apps, lifestyle tools
 
-### 3. Personalized Recommendations
-We match your profile against OpenClaw skills on ClawHub, ranking by:
-- Category alignment (your interests × skill categories)
-- Supporter type fit (Visionaries → bold experimental tools)
-- Engagement patterns (deep research → complex tooling)
+### 3. Multi-Source Recommendations
+We match your taste profile against tools from 3 trusted sources:
+- **ClawHub Skills** – 200+ community-created AI agent skills
+- **Claude Code** – Official Anthropic + 6 community repositories
+- **GitHub Repositories** – 1000+ open source projects across categories
 
-### 4. Identity Card Generation
+Ranking by:
+- **Keyword matching** – Exact and semantic similarity
+- **Personality fit** – Trailblazers get cutting-edge tools
+- **Category alignment** – Your interests × tool categories
+- **Community validation** – What similar users love
+
+### 4. Identity Card & Dashboard
 You get:
-- A shareable dashboard URL
+- A shareable taste profile dashboard
+- Personalized tool recommendations with match reasons
 - An on-chain agent wallet (Base network)
-- A JSON token signed with JWT for verification
+- A JWT-signed token for verification
 
-**No wallet signatures. No Twitter auth. No transaction scraping.**
-Pure conversation intelligence.
+**Privacy-first. GitHub-based. No transaction scraping.**
+Pure taste intelligence.
 
 ---
 
@@ -132,7 +157,7 @@ Pure conversation intelligence.
 ### Option 1: ClawHub (Recommended)
 
 ```bash
-clawhub install bloom
+clawhub install bloom-taste
 ```
 
 ### Option 2: Manual Install
@@ -140,8 +165,8 @@ clawhub install bloom
 ```bash
 # 1. Clone the repo
 cd ~/.openclaw/workspace
-git clone https://github.com/unicornbloom/bloom-identity-skill.git
-cd bloom-identity-skill
+git clone https://github.com/unicornbloom/bloom-taste-skill.git
+cd bloom-taste-skill
 
 # 2. Install dependencies
 npm install
@@ -169,9 +194,10 @@ cp -r openclaw-wrapper ~/.openclaw/skills/bloom
 
 Or use natural language:
 ```
-"discover my supporter type"
-"what's my bloom identity"
-"create my supporter card"
+"discover my taste profile"
+"what's my bloom taste"
+"find tools based on my taste"
+"recommend tools for me"
 ```
 
 ### As a Standalone Tool
@@ -193,11 +219,12 @@ cat conversation.txt | \
 
 ## 🔐 Privacy
 
-- ✅ **Conversation-only analysis** – No wallet signatures or transaction scraping
+- ✅ **GitHub-based analysis** – Uses public GitHub activity only
+- ✅ **No transaction scraping** – No wallet signatures required
 - ✅ **No Twitter auth required** – Optional enhancement, not mandatory
 - ✅ **Ephemeral processing** – Data not stored long-term
-- ✅ **Local-first** – Runs in your OpenClaw environment
-- ✅ **Open source** – Audit the code yourself
+- ✅ **Local-first** – Runs in your environment
+- ✅ **Open source** – Audit the taste algorithm yourself
 
 ---
 
@@ -256,14 +283,14 @@ npx tsx scripts/test-full-flow.ts
 
 ## 🐛 Troubleshooting
 
-**"Insufficient conversation data"**
-→ Need at least 3 messages. Keep chatting about what you're interested in!
+**"GitHub profile not found"**
+→ Make sure you've connected your GitHub account and have public activity
 
 **"Command not found"**
-→ Verify `bloom-identity-skill` is in `~/.openclaw/workspace/` and run `npm install`
+→ Verify `bloom-taste-skill` is in `~/.openclaw/workspace/` and run `npm install`
 
-**No skill recommendations**
-→ Skill recommendations depend on ClawHub API availability. Your identity card still works!
+**No recommendations**
+→ Recommendations depend on GitHub activity and available data sources. Try again later!
 
 **Wallet creation fails**
 → Check your CDP credentials in `.env`. See [SETUP_CDP_CREDENTIALS.md](SETUP_CDP_CREDENTIALS.md).
@@ -285,8 +312,9 @@ npx tsx scripts/test-full-flow.ts
 We welcome contributions! See issues or submit PRs.
 
 Key areas:
-- More supporter type archetypes
-- Better skill recommendation algorithms
+- More personality type archetypes
+- Better taste matching algorithms
+- Additional data sources (Product Hunt, Hacker News, Twitter)
 - Multilingual support
 - Enhanced privacy features
 
@@ -301,14 +329,15 @@ MIT License - see [LICENSE](LICENSE) for details.
 ## 🌐 Links
 
 - **Homepage**: [bloomprotocol.ai](https://bloomprotocol.ai)
+- **For Agents**: [bloomprotocol.ai/for-agents](https://bloomprotocol.ai/for-agents)
 - **ClawHub**: [clawhub.ai/skills/bloom](https://clawhub.ai/skills/bloom)
-- **GitHub**: [github.com/unicornbloom/bloom-identity-skill](https://github.com/unicornbloom/bloom-identity-skill)
+- **GitHub**: [github.com/unicornbloom/bloom-taste-skill](https://github.com/unicornbloom/bloom-taste-skill)
 - **Dashboard**: [bloomprotocol.ai/agents](https://bloomprotocol.ai/agents)
 
 ---
 
-**Built by [Bloom Protocol](https://bloomprotocol.ai) 🌸**
+**Built by [Bloom Protocol](https://bloomprotocol.ai) 🎨**
 
-Making supporter identity portable and provable.
+Understanding taste, one agent at a time.
 
 *Built with [@openclaw](https://openclaw.ai), [@coinbase](https://www.coinbase.com/cloud), and [@base](https://base.org)*
