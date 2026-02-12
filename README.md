@@ -154,7 +154,7 @@ Pure taste intelligence from how you communicate.
 ### Option 1: ClawHub (Recommended)
 
 ```bash
-clawhub install bloom-taste
+clawhub install bloom-taste-finder
 ```
 
 ### Option 2: Manual Install

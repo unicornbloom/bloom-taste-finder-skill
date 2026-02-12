@@ -156,7 +156,7 @@ hype. AI agents are where you spot the next big thing.
 
 ### Quick Install (via ClawHub)
 ```bash
-clawhub install bloom
+clawhub install bloom-taste-finder
 ```
 
 ### Manual Install

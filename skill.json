@@ -1,7 +1,7 @@
 {
-  "name": "bloom-supporter-identity",
+  "name": "bloom-taste-finder",
   "version": "2.0.0",
-  "description": "Discover your supporter personality from conversations. Reveals your type (Visionary, Explorer, Cultivator, Optimizer, Innovator) + personalized AI tool recommendations + shareable identity card. For indie devs, vibe coders, and AI builders.",
+  "description": "Discover your builder taste from conversations. Reveals your type (Visionary, Explorer, Cultivator, Optimizer, Innovator) + personalized tool recommendations from 3 sources. Built with Coinbase AgentKit on Base.",
   "homepage": "https://bloomprotocol.ai",
   "author": "Bloom Protocol",
   "license": "MIT",
