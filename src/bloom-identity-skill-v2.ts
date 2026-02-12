@@ -15,6 +15,7 @@ import { CategoryMapper } from './analyzers/category-mapper';
 import { AgentWallet, AgentWalletInfo } from './blockchain/agent-wallet';
 import { walletStorage } from './blockchain/wallet-storage';
 import { mintIdentitySbt } from './blockchain/identity-sbt';
+import { captureAndUploadCardImage } from './blockchain/card-image';
 import { TwitterShare, createTwitterShare } from './integrations/twitter-share';
 import { ClawHubClient, createClawHubClient } from './integrations/clawhub-client';
 import { ClaudeCodeClient, createClaudeCodeClient } from './integrations/claude-code-client';
@@ -125,7 +126,7 @@ export class BloomIdentitySkillV2 {
       skipShare?: boolean; // Twitter share is optional
       manualAnswers?: ManualAnswer[]; // If already collected
       conversationText?: string; // ⭐ NEW: Direct conversation text from OpenClaw bot
-      mintToBase?: boolean; // ⭐ Optional: mint SBT on Base
+      // SBT minting is automatic when SBT_CONTRACT_ADDRESS is set
     }
   ): Promise<{
     success: boolean;
@@ -377,36 +378,43 @@ export class BloomIdentitySkillV2 {
         hashtags: ['BloomProtocol', 'Web3Identity', 'OpenClaw'],
       } : undefined;
 
-      // Optional: Mint SBT on Base
-      if (options?.mintToBase) {
+      // Auto-mint SBT on Base when contract + minter key are configured
+      const sbtContractAddress = process.env.SBT_CONTRACT_ADDRESS as `0x${string}` | undefined;
+      const sbtMinterKey = process.env.SBT_MINTER_PRIVATE_KEY || process.env.DEPLOYER_PRIVATE_KEY;
+      if (sbtContractAddress && sbtMinterKey) {
         try {
-          const contractAddress = process.env.SBT_CONTRACT_ADDRESS as `0x${string}` | undefined;
-          if (!contractAddress) {
-            throw new Error('SBT_CONTRACT_ADDRESS not set');
+          const minterKey = (sbtMinterKey.startsWith('0x') ? sbtMinterKey : `0x${sbtMinterKey}`) as `0x${string}`;
+
+          // Capture card screenshot from dashboard and upload to IPFS
+          let cardImageUrl: string | undefined;
+          if (dashboardUrl) {
+            console.log('📸 Capturing Taste Card image...');
+            const imageResult = await captureAndUploadCardImage(dashboardUrl, identityData!.personalityType);
+            if (imageResult) {
+              cardImageUrl = imageResult.ipfsUrl;
+              console.log(`✅ Card image uploaded to IPFS: ${imageResult.gatewayUrl}`);
+            }
           }
 
-          const walletRecord = await walletStorage.getUserWallet(userId);
-          if (!walletRecord?.privateKey) {
-            throw new Error('No local private key available for minting');
-          }
-
-          const tokenUri = this.buildTokenUri(identityData!, agentWallet, dashboardUrl);
+          const tokenUri = this.buildTokenUri(identityData!, agentWallet, dashboardUrl, dimensions, cardImageUrl);
           const txHash = await mintIdentitySbt({
-            contractAddress,
+            contractAddress: sbtContractAddress,
             to: agentWallet.address as `0x${string}`,
             tokenUri,
             network: agentWallet.network as 'base-mainnet' | 'base-sepolia',
-            privateKey: walletRecord.privateKey as `0x${string}`,
+            privateKey: minterKey,
           });
 
           mintAction = {
-            contractAddress,
+            contractAddress: sbtContractAddress,
             tokenUri,
             txHash,
             network: agentWallet.network,
           };
+          console.log(`✅ Taste Card minted on Base (tx: ${txHash.slice(0, 10)}...)`);
         } catch (error) {
-          console.debug('SBT mint skipped:', error);
+          // Non-blocking — skill still succeeds without SBT
+          console.debug('SBT mint skipped:', error instanceof Error ? error.message : error);
         }
       }
 
@@ -442,22 +450,37 @@ export class BloomIdentitySkillV2 {
     }
   }
 
-  private buildTokenUri(identity: IdentityData, wallet: AgentWalletInfo, dashboardUrl?: string): string {
-    const metadata = {
-      name: `Bloom Identity — ${identity.personalityType}`,
-      description: identity.customDescription,
-      image: dashboardUrl || undefined,
+  private buildTokenUri(
+    identity: IdentityData,
+    wallet: AgentWalletInfo,
+    dashboardUrl?: string,
+    dims?: { conviction: number; intuition: number; contribution: number },
+    ipfsImageUrl?: string,
+  ): string {
+    const baseUrl = process.env.DASHBOARD_URL || 'https://preflight.bloomprotocol.ai';
+    // Use IPFS screenshot if available, fallback to static OG image
+    const typeSlug = identity.personalityType.replace(/^The /, '').toLowerCase();
+    const ogImage = ipfsImageUrl || `${baseUrl}/og/${typeSlug}.png`;
+
+    const metadata: Record<string, any> = {
+      name: `Bloom Taste Card — ${identity.personalityType}`,
+      description: identity.customTagline,
+      image: ogImage,
+      external_url: dashboardUrl,
       attributes: [
-        { trait_type: 'Personality', value: identity.personalityType },
-        { trait_type: 'Main Categories', value: identity.mainCategories.join(', ') },
-        { trait_type: 'Sub Categories', value: identity.subCategories.join(', ') },
+        { trait_type: 'Personality Type', value: identity.personalityType },
+        ...identity.mainCategories.map(c => ({ trait_type: 'Category', value: c })),
       ],
-      properties: {
-        wallet: wallet.address,
-        network: wallet.network,
-        dashboardUrl,
-      },
     };
+
+    // Add dimension scores when available
+    if (dims) {
+      metadata.attributes.push(
+        { trait_type: 'Conviction', value: dims.conviction, display_type: 'number' },
+        { trait_type: 'Intuition', value: dims.intuition, display_type: 'number' },
+        { trait_type: 'Contribution', value: dims.contribution, display_type: 'number' },
+      );
+    }
 
     const json = JSON.stringify(metadata);
     const base64 = Buffer.from(json).toString('base64');
@@ -767,8 +790,9 @@ function formatSuccessMessage(result: any): string {
 "${identityData.customTagline}"
 **Categories**: ${identityData.mainCategories.join(' • ')}`;
 
+  // SBT mint data is in result.actions.mint but not shown to users (web3-native only on dashboard)
   if (recommendations?.length > 0 && result.dashboardUrl) {
-    msg += `\n\n✨ **Your Taste Card is ready** — ${recommendations.length} tools & skills matched to your taste`;
+    msg += `\n\n✨ **Your Taste Card is ready**`;
     msg += `\n→ See your card & recommendations: ${result.dashboardUrl}`;
   } else if (result.dashboardUrl) {
     msg += `\n\n✨ **Your Taste Card is ready**`;

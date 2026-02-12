@@ -17,7 +17,6 @@ program
   .requiredOption('--user-id <userId>', 'OpenClaw user ID')
   .option('--mode <mode>', 'Execution mode: auto, manual, or hybrid', 'auto')
   .option('--skip-share', 'Skip Twitter share link generation', false)
-  .option('--mint-to-base', 'Mint identity card as SBT on Base', false)
   .parse(process.argv);
 
 const options = program.opts();
@@ -32,7 +31,6 @@ async function main() {
     const result = await skill.execute(options.userId, {
       mode: options.mode as ExecutionMode,
       skipShare: options.skipShare,
-      mintToBase: options.mintToBase,
     });
 
     if (!result.success) {
@@ -59,17 +57,17 @@ function formatResult(result: any): void {
   const { identityData, recommendations, dashboardUrl } = result;
 
   console.log('');
-  console.log(`${getPersonalityEmoji(identityData.personalityType)} You're **${identityData.personalityType}**`);
+  console.log(`${getPersonalityEmoji(identityData.personalityType)} You're ${identityData.personalityType}`);
   console.log(`"${identityData.customTagline}"`);
-  console.log(`Categories: ${identityData.mainCategories.join(' • ')}`);
+  console.log(`Categories: ${identityData.mainCategories.join(' \u2022 ')}`);
   console.log('');
 
   if (recommendations?.length > 0 && dashboardUrl) {
-    console.log(`✨ Your Taste Card is ready — ${recommendations.length} tools & skills matched to your taste`);
-    console.log(`→ See your card & recommendations: ${dashboardUrl}`);
+    console.log(`\u2728 Your Taste Card is ready`);
+    console.log(`\u2192 See your card & recommendations: ${dashboardUrl}`);
   } else if (dashboardUrl) {
-    console.log(`✨ Your Taste Card is ready`);
-    console.log(`→ See your card: ${dashboardUrl}`);
+    console.log(`\u2728 Your Taste Card is ready`);
+    console.log(`\u2192 See your card: ${dashboardUrl}`);
   }
 
   console.log('');

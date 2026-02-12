@@ -45,8 +45,8 @@ export async function mintIdentitySbt(params: MintSbtParams): Promise<string> {
     args: [params.to, params.tokenUri],
   });
 
-  // wait for inclusion
-  await publicClient.waitForTransactionReceipt({ hash });
+  // wait for inclusion (60s timeout)
+  await publicClient.waitForTransactionReceipt({ hash, timeout: 60_000 });
 
   return hash;
 }
