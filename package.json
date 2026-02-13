@@ -12,7 +12,8 @@
     "generate-token": "ts-node generate-fresh-token.ts",
     "x-agent": "tsx scripts/autonomous-x-agent.ts",
     "test:x-agent": "tsx scripts/test-x-agent.ts",
-    "mint-sbt": "ts-node scripts/mint-sbt.ts"
+    "mint-sbt": "ts-node scripts/mint-sbt.ts",
+    "missions": "ts-node src/mission-cli.ts"
   },
   "keywords": [
     "openclaw",
