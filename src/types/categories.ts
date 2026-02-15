@@ -69,3 +69,30 @@ export const DEFAULT_FALLBACK_CATEGORIES: CanonicalCategory[] = [
   'Development',
   'Productivity',
 ];
+
+/**
+ * Blocked keywords for filtering out potentially malicious or harmful repos/skills.
+ * Applied to both GitHub and Claude Code recommendation pipelines.
+ */
+export const BLOCKED_KEYWORDS = [
+  'hack', 'crack', 'exploit', 'phishing', 'drainer', 'stealer',
+  'keylogger', 'malware', 'trojan', 'botnet', 'ransomware',
+  'brute-force', 'password-crack', 'rat-tool', 'spyware',
+  'wallet-drainer', 'token-grabber', 'cookie-stealer',
+];
+
+/**
+ * Check if text contains any blocked keywords (case-insensitive).
+ * Uses word-boundary matching where practical to avoid false positives.
+ */
+export function containsBlockedKeyword(text: string): boolean {
+  const lower = text.toLowerCase();
+  return BLOCKED_KEYWORDS.some(keyword => {
+    // Use word boundary regex for single-word keywords, plain includes for hyphenated
+    if (keyword.includes('-')) {
+      return lower.includes(keyword);
+    }
+    const regex = new RegExp(`\\b${keyword}\\b`, 'i');
+    return regex.test(lower);
+  });
+}

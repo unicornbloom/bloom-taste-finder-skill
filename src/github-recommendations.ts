@@ -6,7 +6,7 @@
  */
 
 import type { IdentityData } from './bloom-identity-skill-v2';
-import { CATEGORY_GITHUB_TOPICS } from './types/categories';
+import { CATEGORY_GITHUB_TOPICS, containsBlockedKeyword } from './types/categories';
 
 export interface GitHubRecommendation {
   skillId: string;
@@ -123,7 +123,7 @@ export class GitHubRecommendations {
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
         const dateFilter = sixMonthsAgo.toISOString().split('T')[0];
-        const query = `topic:${topic} stars:>50 pushed:>${dateFilter}`;
+        const query = `topic:${topic} stars:>100 pushed:>${dateFilter} fork:false archived:false`;
         const url = `${this.baseUrl}/search/repositories?q=${encodeURIComponent(query)}&sort=stars&order=desc&per_page=${Math.ceil(limit / topTopics.length)}`;
 
         const headers: Record<string, string> = {
@@ -144,12 +144,18 @@ export class GitHubRecommendations {
 
         const data: GitHubSearchResponse = await response.json();
 
-        // Add unique repos
+        // Add unique repos, filtering out blocked keywords
         for (const repo of data.items) {
-          if (!seenRepos.has(repo.full_name)) {
-            seenRepos.add(repo.full_name);
-            repos.push(repo);
+          if (seenRepos.has(repo.full_name)) continue;
+
+          const textToCheck = `${repo.name} ${repo.description || ''} ${repo.topics.join(' ')}`;
+          if (containsBlockedKeyword(textToCheck)) {
+            console.log(`🚫 Blocked repo: ${repo.full_name} (matched blocklist)`);
+            continue;
           }
+
+          seenRepos.add(repo.full_name);
+          repos.push(repo);
         }
 
       } catch (error) {

@@ -10,6 +10,8 @@
  * - hesreallyhim/awesome-claude-code (Broader ecosystem)
  */
 
+import { containsBlockedKeyword } from '../types/categories';
+
 const SKILL_REPOS = [
   {
     owner: 'anthropics',
@@ -268,6 +270,15 @@ export class ClaudeCodeClient {
         return { skill, score };
       })
       .filter(({ score }) => score > 0) // Only include matches
+      .filter(({ skill }) => {
+        // Block skills with malicious keywords in name or description
+        const textToCheck = `${skill.skillName} ${skill.description}`;
+        if (containsBlockedKeyword(textToCheck)) {
+          console.log(`🚫 Blocked skill: ${skill.skillName} (matched blocklist)`);
+          return false;
+        }
+        return true;
+      })
       .sort((a, b) => b.score - a.score) // Sort by score
       .map(({ skill, score }) => ({ ...skill, matchScore: score })); // Preserve score
   }
