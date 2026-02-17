@@ -22,7 +22,18 @@ export interface ClawHubSkill {
   url: string;
   categories?: string[];
   creator?: string;
-  creatorUserId?: number;
+  creatorUserId?: string;
+  stats?: {
+    downloads: number;
+    versions: number;
+    stars: number;
+    installsAllTime: number;
+    comments: number;
+  };
+  moderation?: {
+    isSuspicious: boolean;
+    isMalwareBlocked: boolean;
+  };
 }
 
 export interface ClawHubSearchOptions {
@@ -103,6 +114,9 @@ export class ClawHubClient {
 
   /**
    * Get skill details using HTTP API
+   *
+   * Detail response is nested: { skill: {...}, owner: {...}, moderation: {...}, latestVersion: {...} }
+   * (different from search results which are flat objects)
    */
   async getSkillDetails(slug: string): Promise<ClawHubSkill | null> {
     try {
@@ -117,7 +131,7 @@ export class ClawHubClient {
       }
 
       const data = await response.json();
-      return this.parseSkillObject(data);
+      return this.parseDetailResponse(data);
     } catch (error) {
       console.error(`❌ Failed to get skill details for ${slug}:`, error);
       return null;
@@ -139,15 +153,15 @@ export class ClawHubClient {
   }
 
   /**
-   * Parse a single skill object from API
+   * Parse a single flat skill object (from search results)
    */
   private parseSkillObject(item: any): ClawHubSkill {
     const slug = item.slug || '';
-    const version = item.version || item.latestVersion?.version || '1.0.0';
+    const version = item.version || '1.0.0';
     const name = item.displayName || item.name || this.extractName(item.summary || '');
     const description = item.summary || item.description || '';
     const similarityScore = item.score ?? 0;
-    const tags = item.tags || [];
+    const tags = Array.isArray(item.tags) ? item.tags : [];
 
     return {
       slug,
@@ -157,8 +171,48 @@ export class ClawHubClient {
       similarityScore,
       url: `https://clawhub.ai/skills/${slug}`,
       categories: this.inferCategories(slug, `${description} ${tags.join(' ')}`),
-      creator: item.owner?.username,
-      creatorUserId: item.owner?.id,
+      // Search results don't include owner — will be populated by getSkillDetails()
+      creator: item.owner?.handle || item.owner?.username,
+      creatorUserId: item.owner?.userId || item.owner?.id,
+    };
+  }
+
+  /**
+   * Parse nested detail response: { skill, owner, moderation, latestVersion }
+   */
+  private parseDetailResponse(data: any): ClawHubSkill {
+    const skill = data.skill || data;
+    const owner = data.owner;
+    const moderation = data.moderation;
+    const latestVersion = data.latestVersion;
+
+    const slug = skill.slug || '';
+    const version = latestVersion?.version || skill.version || '1.0.0';
+    const name = skill.displayName || skill.name || this.extractName(skill.summary || '');
+    const description = skill.summary || skill.description || '';
+    const tags = Array.isArray(skill.tags) ? skill.tags : [];
+
+    return {
+      slug,
+      version: version.startsWith('v') ? version : `v${version}`,
+      name,
+      description,
+      similarityScore: 0,
+      url: `https://clawhub.ai/skills/${slug}`,
+      categories: this.inferCategories(slug, `${description} ${tags.join(' ')}`),
+      creator: owner?.handle || owner?.username,
+      creatorUserId: owner?.userId || owner?.id,
+      stats: skill.stats ? {
+        downloads: skill.stats.downloads ?? 0,
+        versions: skill.stats.versions ?? 0,
+        stars: skill.stats.stars ?? 0,
+        installsAllTime: skill.stats.installsAllTime ?? 0,
+        comments: skill.stats.comments ?? 0,
+      } : undefined,
+      moderation: moderation ? {
+        isSuspicious: moderation.isSuspicious ?? false,
+        isMalwareBlocked: moderation.isMalwareBlocked ?? false,
+      } : undefined,
     };
   }
 

@@ -198,25 +198,39 @@ async function getClawHubRecommendations(
 
     if (rawSkills.length === 0) return [];
 
-    // 2. For each result, fetch details + GitHub cross-check in parallel
+    // 2. For each result, fetch details first (search results don't include owner)
+    //    then GitHub cross-check with the owner from details
     const verifiedSkills = await Promise.all(
       rawSkills.map(async (skill): Promise<SkillRecommendation | null> => {
-        const [details, isVerified] = await Promise.all([
-          client.getSkillDetails(skill.slug).catch(() => null),
-          skill.creator
-            ? verifySkillOnGitHub(skill.creator, skill.slug)
-            : Promise.resolve(false),
-        ]);
+        // Step A: Fetch full details (includes owner, stats, moderation)
+        const details = await client.getSkillDetails(skill.slug).catch(() => null);
+        if (!details) return null;
 
-        // Must pass BOTH: details fetched + GitHub verified
-        if (!details || !isVerified) return null;
+        // Step B: GitHub cross-check using owner from details
+        const owner = details.creator;
+        if (!owner) {
+          console.log(`[clawhub] Skipped ${skill.slug}: no owner`);
+          return null;
+        }
+
+        const isVerified = await verifySkillOnGitHub(owner, skill.slug);
+        if (!isVerified) {
+          console.log(`[clawhub] Skipped ${skill.slug}: GitHub cross-check failed (owner: ${owner})`);
+          return null;
+        }
 
         // Quality gates
-        const raw = details as any;
 
-        // Moderation flags
-        if (raw.moderation?.isSuspicious === true || raw.moderation?.isMalwareBlocked === true) {
-          console.log(`[clawhub] Skipped ${skill.slug}: moderation flag`);
+        // Traction — read early, used in moderation gate below
+        const downloads = details.stats?.downloads ?? 0;
+
+        // Moderation flags: always block malware; suspicious is OK if high traction
+        if (details.moderation?.isMalwareBlocked === true) {
+          console.log(`[clawhub] Skipped ${skill.slug}: malware blocked`);
+          return null;
+        }
+        if (details.moderation?.isSuspicious === true && downloads <= 200) {
+          console.log(`[clawhub] Skipped ${skill.slug}: suspicious + low downloads (${downloads})`);
           return null;
         }
 
@@ -237,12 +251,11 @@ async function getClawHubRecommendations(
           return null;
         }
 
-        // Traction gate (Fix 4): minimum 50 downloads
-        const downloads = raw.stats?.downloads ?? 0;
+        // Traction gate: minimum 50 downloads
         if (downloads < 50) return null;
 
         // Relevance gate: similarity score minimum
-        if (skill.similarityScore < 2.5) return null;
+        if (skill.similarityScore < 1.0) return null;
 
         // Map to SkillRecommendation
         const normalizedScore = Math.min(Math.round((skill.similarityScore / 4) * 100), 100);
@@ -277,8 +290,8 @@ async function getClawHubRecommendations(
           categories: details.categories || ['General'],
           matchScore: Math.min(normalizedScore + boost, 100),
           reason,
-          creator: details.creator || skill.creator,
-          creatorUserId: details.creatorUserId || skill.creatorUserId,
+          creator: owner,
+          creatorUserId: details.creatorUserId,
           source: 'ClawHub' as const,
           downloads,
         };
