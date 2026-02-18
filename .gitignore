@@ -5,3 +5,5 @@ dist/
 .DS_Store
 .wallet-storage/
 .solc-output/
+.bloom-discovery-state.json
+bloom-discoveries.md

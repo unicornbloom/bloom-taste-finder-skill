@@ -5,12 +5,15 @@
   "main": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./recommendation-pipeline": "./dist/recommendation-pipeline.js"
+    "./recommendation-pipeline": "./dist/recommendation-pipeline.js",
+    "./discovery-sync": "./dist/discovery-sync.js"
   },
   "scripts": {
     "start": "ts-node src/index.ts",
     "build": "tsc",
     "build:pipeline": "esbuild src/recommendation-pipeline.ts --bundle --platform=node --outfile=dist/recommendation-pipeline.js --format=cjs",
+    "build:discovery": "esbuild src/discovery-sync.ts --bundle --platform=node --outfile=dist/discovery-sync.js --format=cjs",
+    "build:all": "npm run build:pipeline && npm run build:discovery",
     "test": "echo \"No tests yet\"",
     "test:conversation": "ts-node scripts/test-conversation-analysis.ts",
     "test:cdp-wallet": "ts-node scripts/test-cdp-wallet.ts",

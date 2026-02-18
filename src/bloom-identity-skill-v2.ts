@@ -19,6 +19,7 @@ import { captureAndUploadCardImage } from './blockchain/card-image';
 import { TwitterShare, createTwitterShare } from './integrations/twitter-share';
 import { PersonalityType } from './types/personality';
 import { refreshRecommendations, SkillRecommendation } from './recommendation-pipeline';
+import { syncDiscoveries } from './discovery-sync';
 
 // Re-export for backwards compatibility
 export { PersonalityType };
@@ -325,6 +326,11 @@ export class BloomIdentitySkillV2 {
       }
 
       if (agentUserId) {
+        // Seed discoveries file (fire-and-forget)
+        syncDiscoveries(agentUserId).catch(err => {
+          console.debug('[discovery-sync] fire-and-forget failed:', err instanceof Error ? err.message : err);
+        });
+
         const baseUrl = process.env.DASHBOARD_URL || 'https://preflight.bloomprotocol.ai';
         const cacheBust = Date.now();
         dashboardUrl = `${baseUrl}/agents/${agentUserId}?v=${cacheBust}`;
