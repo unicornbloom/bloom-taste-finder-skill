@@ -454,6 +454,7 @@ export class BloomIdentitySkillV2 {
       attributes: [
         { trait_type: 'Personality Type', value: identity.personalityType },
         ...identity.mainCategories.map(c => ({ trait_type: 'Category', value: c })),
+        { trait_type: 'Discovery Mode', value: 'Active' },
       ],
     };
 
