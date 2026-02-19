@@ -92,6 +92,7 @@ export class BloomIdentitySkillV2 {
       const registration = await this.agentWallet.registerWithBloom('Bloom Skill Discovery Agent');
       console.log(`✅ Agent pre-registered with Bloom: userId ${registration.agentUserId}`);
       walletInfo.x402Endpoint = registration.x402Endpoint;
+      walletInfo.agentUserId = registration.agentUserId;
     } catch (error) {
       // Not critical - identity will be saved in Step 5 via agent-save fallback
       console.warn('⚠️ Bloom pre-registration skipped (identity will be saved later)');
@@ -325,6 +326,12 @@ export class BloomIdentitySkillV2 {
         }
       }
 
+      // Fallback: use agentUserId from pre-registration
+      if (!agentUserId && agentWallet.agentUserId) {
+        agentUserId = agentWallet.agentUserId;
+        console.log(`✅ Using pre-registered agentUserId: ${agentUserId}`);
+      }
+
       if (agentUserId) {
         // Seed discoveries file (fire-and-forget)
         syncDiscoveries(agentUserId).catch(err => {
@@ -332,8 +339,7 @@ export class BloomIdentitySkillV2 {
         });
 
         const baseUrl = process.env.DASHBOARD_URL || 'https://preflight.bloomprotocol.ai';
-        const cacheBust = Date.now();
-        dashboardUrl = `${baseUrl}/agents/${agentUserId}?v=${cacheBust}`;
+        dashboardUrl = `${baseUrl}/agents/${agentUserId}`;
         console.log(`✅ Public URL created: ${dashboardUrl}`);
       }
 

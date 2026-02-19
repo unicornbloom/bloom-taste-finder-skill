@@ -33,6 +33,7 @@ export interface AgentWalletInfo {
   network: string;
   x402Endpoint?: string;
   balance?: string;
+  agentUserId?: number;
 }
 
 /**
@@ -449,6 +450,17 @@ export class AgentWallet {
       });
 
       if (!response.ok) {
+        if (response.status === 409) {
+          // Already registered — extract existing agentUserId from response
+          const body = await response.json().catch(() => null);
+          if (body?.data?.agentUserId) {
+            console.log(`✅ Agent already registered (userId: ${body.data.agentUserId})`);
+            return {
+              agentUserId: body.data.agentUserId,
+              x402Endpoint: body.data.x402Endpoint || '',
+            };
+          }
+        }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
@@ -629,6 +641,16 @@ export class AgentWallet {
     });
 
     if (!response.ok) {
+      if (response.status === 409) {
+        const body = await response.json().catch(() => null);
+        if (body?.data?.agentUserId) {
+          console.log(`✅ Identity already saved (userId: ${body.data.agentUserId})`);
+          return {
+            agentUserId: body.data.agentUserId,
+            dashboardUrl: body.data.dashboardUrl || '',
+          };
+        }
+      }
       const errorText = await response.text();
       throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
