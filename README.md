@@ -21,6 +21,7 @@ Unlike traditional recommendation systems that rely on popularity, Bloom Taste F
   - ClawHub Skills (200+ community-created AI agent skills)
   - Claude Code (Official Anthropic + 6 community repositories)
   - GitHub Repositories (1000+ open source projects)
+- 🌱 **Self-Growing Agent** – Recommendations evolve as you interact, with USER.md integration and feedback loops
 - 📊 **Taste Profile** – Understand your preferences beyond simple keywords
 - 🔗 **Shareable Identity Card** – Showcase your taste profile
 - 🤖 **Agent-Ready** – Works with Claude Code, OpenClaw, and other AI agents
@@ -137,7 +138,25 @@ Ranking by:
 - **Category alignment** – Your interests × tool categories
 - **Community validation** – What similar users love
 
-### 4. Identity Card & Dashboard
+### 4. Self-Growing Recommendations
+
+Your agent doesn't stop at the first recommendation — it **learns and improves**:
+
+- **USER.md Integration** — Reads your `~/.config/claude/USER.md` for declared role, tech stack, and interests. Falls back gracefully if not present.
+- **Feedback Loop** — Interactions (clicks, saves, dismissals) adjust future recommendations. Engaged categories get boosted; dismissed skills get filtered out.
+- **Discovery Sync** — Newly discovered skills sync to a local `bloom-discoveries.md`, building growing context.
+- **TTL Refresh** — Recommendations refresh every 7 days via backend worker, pulling in new skills and applying your latest feedback.
+
+**Signal weighting evolves over time:**
+| Source | Initial Weight | After 15+ interactions |
+|--------|---------------|----------------------|
+| Conversation | ~60% | ~40% |
+| USER.md | ~30% | ~20% |
+| Feedback | ~0% | up to ~30% |
+
+> **Safety-first:** Bloom recommends skills but **never auto-installs** them. You always decide what to install. We believe great recommendations earn trust — auto-installing unvetted code doesn't.
+
+### 5. Identity Card & Dashboard
 You get:
 - A shareable taste profile dashboard
 - Personalized tool recommendations with match reasons

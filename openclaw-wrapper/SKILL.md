@@ -42,6 +42,7 @@ Your personalized Bloom Supporter Identity Card reveals:
 - **📊 2x2 Dimensions** – Conviction vs. Intuition, showing how you make decisions
 - **🏷️ Top Categories** – AI Tools, Productivity, Consumer Apps—where you spend your energy
 - **🎯 Tool Recommendations** – The top 5 tools matched to your profile
+- **🌱 Self-Growing Agent** – Your recommendations evolve as you interact (see below)
 - **🔗 Shareable Card** – Show off your supporter identity
 - **🤖 Agent Wallet** – Ready for tipping creators (powered by Coinbase on Base)
 
@@ -78,6 +79,30 @@ That's it. Or use natural language:
 ```
 
 Works with as few as 3 messages—but richer history = deeper insights.
+
+## 🌱 Self-Growing Recommendations
+
+Your agent doesn't just recommend once — it **learns and improves** over time.
+
+### How It Works
+
+1. **USER.md Integration** — If you have a `~/.config/claude/USER.md`, Bloom reads your declared role, tech stack, and interests to enrich your profile. No USER.md? No problem — the system gracefully falls back to conversation-only analysis.
+
+2. **Feedback Loop** — As you interact with recommendations (click, save, or dismiss), Bloom adjusts future suggestions. Categories you engage with get boosted; dismissed skills get filtered out.
+
+3. **Discovery Sync** — New skills you discover through Bloom are synced back to a local `bloom-discoveries.md` file, building a growing context of your preferences.
+
+4. **TTL Refresh** — Recommendations refresh every 7 days, incorporating your latest interactions and newly published skills from ClawHub, Claude Code, and GitHub.
+
+### Why We Don't Auto-Install
+
+Bloom **recommends skills but never installs them automatically**. You always decide what to install. This is a deliberate safety choice:
+
+- **Your control** — Recommendations help you discover; installation is your decision
+- **Supply chain safety** — Auto-installing unvetted code is a security risk
+- **Trust-first** — We'd rather earn your trust through great recommendations than take shortcuts
+
+> Your agent grows by discovering more skills — not by installing them behind your back.
 
 ## 🌟 Why Bloom Taste Finder?
 
