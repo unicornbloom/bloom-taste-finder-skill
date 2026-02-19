@@ -387,7 +387,7 @@ export class BloomIdentitySkillV2 {
           console.debug('[discovery-sync] fire-and-forget failed:', err instanceof Error ? err.message : err);
         });
 
-        const baseUrl = process.env.DASHBOARD_URL || 'https://preflight.bloomprotocol.ai';
+        const baseUrl = process.env.DASHBOARD_URL || 'https://bloomprotocol.ai';
         dashboardUrl = `${baseUrl}/agents/${agentUserId}`;
         console.log(`✅ Public URL created: ${dashboardUrl}`);
       }
@@ -479,8 +479,8 @@ export class BloomIdentitySkillV2 {
           save: dashboardUrl ? {
             // For "Save to Collection" button
             prompt: 'Save this card to your Bloom collection',
-            registerUrl: `${process.env.DASHBOARD_URL || 'https://preflight.bloomprotocol.ai'}/register?return=${encodeURIComponent(dashboardUrl)}`,
-            loginUrl: `${process.env.DASHBOARD_URL || 'https://preflight.bloomprotocol.ai'}/login?return=${encodeURIComponent(dashboardUrl)}`,
+            registerUrl: `${process.env.DASHBOARD_URL || 'https://bloomprotocol.ai'}/register?return=${encodeURIComponent(dashboardUrl)}`,
+            loginUrl: `${process.env.DASHBOARD_URL || 'https://bloomprotocol.ai'}/login?return=${encodeURIComponent(dashboardUrl)}`,
           } : undefined,
           mint: mintAction,
         },
@@ -502,7 +502,7 @@ export class BloomIdentitySkillV2 {
     dims?: { conviction: number; intuition: number; contribution: number },
     ipfsImageUrl?: string,
   ): string {
-    const baseUrl = process.env.DASHBOARD_URL || 'https://preflight.bloomprotocol.ai';
+    const baseUrl = process.env.DASHBOARD_URL || 'https://bloomprotocol.ai';
     // Use IPFS screenshot if available, fallback to static OG image
     const typeSlug = identity.personalityType.replace(/^The /, '').toLowerCase();
     const ogImage = ipfsImageUrl || `${baseUrl}/og/${typeSlug}.png`;
