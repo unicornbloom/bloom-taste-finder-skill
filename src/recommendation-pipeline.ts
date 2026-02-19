@@ -27,6 +27,10 @@ export interface RefreshIdentityInput {
     intuition: number;
     contribution: number;
   };
+  feedback?: {
+    categoryWeights?: Record<string, number>;
+    excludeSkillIds?: string[];
+  };
 }
 
 export interface SkillRecommendation {
@@ -166,7 +170,31 @@ export async function refreshRecommendations(
         byUrl.set(key, rec);
       }
     }
-    const deduplicated = Array.from(byUrl.values());
+    let deduplicated = Array.from(byUrl.values());
+
+    // Apply feedback filters: exclude dismissed skills
+    if (identity.feedback?.excludeSkillIds?.length) {
+      const excludeSet = new Set(identity.feedback.excludeSkillIds.map(id => id.toLowerCase()));
+      const before = deduplicated.length;
+      deduplicated = deduplicated.filter(s => !excludeSet.has(s.skillId.toLowerCase()));
+      if (before !== deduplicated.length) {
+        console.log(`[recommendation-pipeline] Excluded ${before - deduplicated.length} dismissed skills`);
+      }
+    }
+
+    // Apply feedback category weights as score multiplier
+    if (identity.feedback?.categoryWeights) {
+      const weights = identity.feedback.categoryWeights;
+      for (const skill of deduplicated) {
+        for (const cat of skill.categories) {
+          const w = weights[cat];
+          if (w !== undefined && w !== 1.0) {
+            skill.matchScore = Math.min(Math.round(skill.matchScore * w), 100);
+            break; // Apply best matching category weight once
+          }
+        }
+      }
+    }
 
     // Group by normalized categories (3-7 per category)
     const grouped = groupByCategory(deduplicated, normalizedCategories);

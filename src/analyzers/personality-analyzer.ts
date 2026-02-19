@@ -67,12 +67,25 @@ const TAGLINE_TEMPLATES = {
 export class PersonalityAnalyzer {
   /**
    * Main analysis method — calculates dimensions and determines personality
+   *
+   * @param nudges Optional dimension adjustments from USER.md signal merger (-15 to +15 each)
    */
-  async analyze(userData: UserData): Promise<PersonalityAnalysis> {
+  async analyze(
+    userData: UserData,
+    nudges?: { conviction: number; intuition: number; contribution: number },
+  ): Promise<PersonalityAnalysis> {
     console.log('🤖 Analyzing user data for 2-axis personality classification...');
 
     // Step 1: Calculate dimension scores
     const dimensions = this.calculateDimensions(userData);
+
+    // Step 1.5: Apply dimension nudges from USER.md (if present)
+    if (nudges) {
+      dimensions.conviction = Math.min(Math.max(dimensions.conviction + nudges.conviction, 0), 100);
+      dimensions.intuition = Math.min(Math.max(dimensions.intuition + nudges.intuition, 0), 100);
+      dimensions.contribution = Math.min(Math.max(dimensions.contribution + nudges.contribution, 0), 100);
+      console.log(`📊 Nudges applied: conviction ${nudges.conviction >= 0 ? '+' : ''}${nudges.conviction}, intuition ${nudges.intuition >= 0 ? '+' : ''}${nudges.intuition}, contribution ${nudges.contribution >= 0 ? '+' : ''}${nudges.contribution}`);
+    }
     console.log(`📊 Dimensions: Conviction=${dimensions.conviction}, Intuition=${dimensions.intuition}, Contribution=${dimensions.contribution}`);
 
     // Step 2: Classify personality type (contribution override logic)

@@ -20,10 +20,12 @@ import { TwitterShare, createTwitterShare } from './integrations/twitter-share';
 import { PersonalityType } from './types/personality';
 import { refreshRecommendations, SkillRecommendation } from './recommendation-pipeline';
 import { syncDiscoveries } from './discovery-sync';
+import { parseUserMd, UserMdSignals } from './parsers/user-md-parser';
+import { mergeSignals, MergedSignals, FeedbackData } from './analyzers/signal-merger';
 
 // Re-export for backwards compatibility
 export { PersonalityType };
-export type { SkillRecommendation };
+export type { SkillRecommendation, FeedbackData, UserMdSignals };
 
 export interface IdentityData {
   personalityType: PersonalityType;
@@ -111,6 +113,8 @@ export class BloomIdentitySkillV2 {
       skipShare?: boolean; // Twitter share is optional
       manualAnswers?: ManualAnswer[]; // If already collected
       conversationText?: string; // ⭐ NEW: Direct conversation text from OpenClaw bot
+      userMdPath?: string;       // Path to USER.md, default ~/.config/claude/USER.md
+      feedback?: FeedbackData;   // Feedback signals from recommendation interactions
       // SBT minting is automatic when SBT_CONTRACT_ADDRESS is set
     }
   ): Promise<{
@@ -161,6 +165,15 @@ export class BloomIdentitySkillV2 {
       let dimensions: { conviction: number; intuition: number; contribution: number } | undefined;
       let mintAction: { contractAddress: string; tokenUri: string; txHash: string; network: string } | undefined;
 
+      // Step 1.5: Parse USER.md for static profile signals
+      console.log('📋 Step 1.5: Parsing USER.md...');
+      const userMdSignals = parseUserMd(options?.userMdPath);
+      if (userMdSignals) {
+        console.log(`✅ USER.md signals: role=${userMdSignals.role || 'none'}, focus=${userMdSignals.currentFocus?.join(', ') || 'none'}, style=${userMdSignals.workingStyle || 'none'}`);
+      } else {
+        console.log('📋 No USER.md found (graceful degradation)');
+      }
+
       if (mode !== ExecutionMode.MANUAL) {
         console.log('📊 Step 1: Attempting data collection...');
 
@@ -206,24 +219,52 @@ export class BloomIdentitySkillV2 {
           if (hasSufficientData) {
             console.log('✅ Sufficient data available, proceeding with AI analysis...');
 
-            // Analyze personality from data
-            const analysis = await this.personalityAnalyzer.analyze(userData);
+            // Pre-compute dimension nudges from USER.md + feedback
+            const preNudges = (userMdSignals || options?.feedback)
+              ? mergeSignals(
+                  [], // categories not needed yet, just computing nudges
+                  { conviction: 0, intuition: 0, contribution: 0 },
+                  userMdSignals,
+                  options?.feedback ?? null,
+                )
+              : null;
+
+            // Analyze personality from data (with optional dimension nudges)
+            const analysis = await this.personalityAnalyzer.analyze(
+              userData,
+              preNudges?.dimensionNudges,
+            );
+
+            // Build identity from conversation analysis
+            const conversationCategories = analysis.detectedCategories.length > 0
+              ? analysis.detectedCategories
+              : this.categoryMapper.getMainCategories(analysis.personalityType);
+
+            // Step 2.5: Merge signals (conversation + USER.md + feedback)
+            const merged = mergeSignals(
+              conversationCategories,
+              analysis.dimensions,
+              userMdSignals,
+              options?.feedback ?? null,
+            );
 
             identityData = {
               personalityType: analysis.personalityType,
               customTagline: analysis.tagline,
               customDescription: analysis.description,
-              // ⭐ Use detected categories from actual conversation data
-              // Priority: What they talk about > personality-based defaults
-              mainCategories: analysis.detectedCategories.length > 0
-                ? analysis.detectedCategories
-                : this.categoryMapper.getMainCategories(analysis.personalityType),
-              subCategories: analysis.detectedInterests,
+              mainCategories: merged.mainCategories,
+              subCategories: [...analysis.detectedInterests, ...merged.subCategories.filter(
+                s => !analysis.detectedInterests.includes(s),
+              )],
               dimensions: analysis.dimensions,
             };
 
             // ⭐ Capture 2x2 metrics
             dimensions = analysis.dimensions;
+
+            if (userMdSignals || options?.feedback) {
+              console.log(`✅ Signals merged: categories=${merged.mainCategories.join(', ')}`);
+            }
 
             console.log(`✅ Analysis complete: ${identityData.personalityType}`);
           } else {
@@ -275,7 +316,15 @@ export class BloomIdentitySkillV2 {
 
       // Step 3: Recommend OpenClaw Skills ⭐ NEW
       console.log('🔍 Step 3: Finding matching OpenClaw Skills...');
-      const recommendations = await this.recommendSkills(identityData!);
+      const merged = (userMdSignals || options?.feedback)
+        ? mergeSignals(
+            identityData!.mainCategories,
+            identityData!.dimensions || { conviction: 50, intuition: 50, contribution: 50 },
+            userMdSignals,
+            options?.feedback ?? null,
+          )
+        : null;
+      const recommendations = await this.recommendSkills(identityData!, merged);
       console.log(`✅ Found ${recommendations.length} matching skills`);
 
       // Step 4: Initialize Agent Wallet ⭐ Per-User Wallet
@@ -490,16 +539,20 @@ export class BloomIdentitySkillV2 {
    * Delegates to the extracted recommendation-pipeline module so that
    * the same logic can be reused by the backend Bull queue refresh job.
    */
-  private async recommendSkills(identity: IdentityData): Promise<SkillRecommendation[]> {
-    return refreshRecommendations(
-      {
-        mainCategories: identity.mainCategories,
-        subCategories: identity.subCategories,
-        personalityType: identity.personalityType,
-        dimensions: identity.dimensions,
-      },
-      { githubToken: process.env.GITHUB_TOKEN },
-    );
+  private async recommendSkills(
+    identity: IdentityData,
+    merged?: MergedSignals | null,
+  ): Promise<SkillRecommendation[]> {
+    return refreshRecommendations({
+      mainCategories: identity.mainCategories,
+      subCategories: identity.subCategories,
+      personalityType: identity.personalityType,
+      dimensions: identity.dimensions,
+      feedback: merged ? {
+        categoryWeights: merged.categoryWeights,
+        excludeSkillIds: merged.excludedSkillIds,
+      } : undefined,
+    });
   }
 }
 
