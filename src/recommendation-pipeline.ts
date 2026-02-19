@@ -251,11 +251,11 @@ async function getClawHubRecommendations(
           return null;
         }
 
-        // Traction gate: minimum 50 downloads
-        if (downloads < 50) return null;
+        // Traction gate: minimum 20 downloads
+        if (downloads < 20) return null;
 
         // Relevance gate: similarity score minimum
-        if (skill.similarityScore < 1.0) return null;
+        if (skill.similarityScore < 0.5) return null;
 
         // Map to SkillRecommendation
         const normalizedScore = Math.min(Math.round((skill.similarityScore / 4) * 100), 100);
