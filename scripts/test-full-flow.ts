@@ -33,9 +33,24 @@ async function testFullFlow() {
   const testUserId = `test-user-${Date.now()}`;
   console.log(`User ID: ${testUserId}\n`);
 
-  const result = await skill.execute(testUserId, {
-    skipShare: true, // Skip Twitter share for testing
+  // First attempt — will likely need manual Q&A for test users with no history
+  let result = await skill.execute(testUserId, {
+    skipShare: true,
   });
+
+  // If manual input required, provide test answers and retry
+  if (!result.success && result.needsManualInput) {
+    console.log('📝 No conversation history — providing Q&A answers...\n');
+    result = await skill.execute(testUserId, {
+      skipShare: true,
+      manualAnswers: [
+        { questionIndex: 0, answerIndex: 0 }, // Exploring or building new AI tools
+        { questionIndex: 1, answerIndex: 0 }, // Fresh AI/tool demos
+        { questionIndex: 2, answerIndex: 0 }, // The first to try new tech
+        { questionIndex: 3, answerIndex: 0 }, // AI Tools / New Tech
+      ],
+    });
+  }
 
   console.log('━'.repeat(60));
   console.log('📊 RESULTS');
