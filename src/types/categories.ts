@@ -31,15 +31,15 @@ export type CanonicalCategory = (typeof CANONICAL_CATEGORIES)[number];
  * Used by personality-analyzer's detectCategories() and by findBestCategory().
  */
 export const CATEGORY_KEYWORDS: Record<CanonicalCategory, string[]> = {
-  'AI Tools': ['ai', 'gpt', 'llm', 'machine learning', 'neural', 'model', 'chatbot', 'openai', 'anthropic', 'claude', 'copilot', 'prompt', 'inference', 'transformer', 'agent'],
-  'Productivity': ['productivity', 'workflow', 'automation', 'efficiency', 'task management', 'notion', 'calendar', 'time tracking', 'optimize', 'systematic'],
+  'AI Tools': ['ai', 'gpt', 'llm', 'machine learning', 'neural', 'model', 'chatbot', 'openai', 'anthropic', 'claude', 'copilot', 'prompt', 'inference', 'transformer', 'agent', 'gemini', 'image gen', 'text-to'],
+  'Productivity': ['productivity', 'workflow', 'automation', 'efficiency', 'task management', 'notion', 'calendar', 'time tracking', 'optimize', 'systematic', 'slide', 'template', 'formatter', 'compress'],
   'Wellness': ['wellness', 'health', 'fitness', 'meditation', 'mindfulness', 'mental health', 'yoga', 'sleep', 'nutrition', 'self-care', 'wellbeing'],
-  'Education': ['education', 'learning', 'course', 'teach', 'knowledge', 'tutorial', 'study', 'mentor', 'curriculum', 'workshop', 'training'],
+  'Education': ['education', 'learning', 'course', 'teach', 'knowledge', 'tutorial', 'study', 'mentor', 'curriculum', 'workshop', 'training', 'comic', 'explainer'],
   'Crypto': ['crypto', 'defi', 'web3', 'blockchain', 'token', 'dao', 'nft', 'onchain', 'smart contract', 'wallet', 'protocol', 'ethereum', 'solana', 'base'],
   'Lifestyle': ['lifestyle', 'fashion', 'travel', 'personal brand', 'food', 'photography'],
-  'Design': ['design', 'ui', 'ux', 'figma', 'creative', 'visual', 'typography', 'layout', 'prototype'],
-  'Development': ['development', 'coding', 'programming', 'software', 'engineering', 'code', 'developer', 'api', 'framework', 'architecture', 'debugging', 'typescript', 'python', 'rust'],
-  'Marketing': ['marketing', 'growth', 'seo', 'content strategy', 'advertising', 'brand', 'conversion', 'funnel', 'campaign', 'audience'],
+  'Design': ['design', 'ui', 'ux', 'figma', 'creative', 'visual', 'typography', 'layout', 'prototype', 'infographic', 'illustration', 'cover image', 'graphic'],
+  'Development': ['development', 'coding', 'programming', 'software', 'engineering', 'code', 'developer', 'api', 'framework', 'architecture', 'debugging', 'typescript', 'python', 'rust', 'markdown', 'html', 'cli', 'url-to', 'converter', 'formatter'],
+  'Marketing': ['marketing', 'growth', 'seo', 'content strategy', 'advertising', 'brand', 'conversion', 'funnel', 'campaign', 'audience', 'copywriting', 'copy editing', 'cro', 'landing page', 'onboarding', 'churn', 'referral', 'email sequence', 'cold email', 'drip', 'pricing', 'paywall', 'popup', 'a/b test', 'split test', 'analytics', 'tracking', 'ads', 'ad creative', 'competitor', 'launch', 'social content', 'social media', 'wechat', 'xiaohongshu', 'post to x'],
   'Finance': ['finance', 'investing', 'trading', 'portfolio', 'wealth', 'stock', 'market', 'budget', 'revenue'],
 };
 
